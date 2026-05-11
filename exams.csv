@@ -1,0 +1,11 @@
+ID,Subject,Date,TimeSlot,Duration,SpecialRequirements
+EXAM_001,Data Structures,2024-12-15,morning,180,
+EXAM_002,Algorithms,2024-12-16,afternoon,180,
+EXAM_003,Database Systems,2024-12-17,morning,150,
+EXAM_004,Software Engineering,2024-12-18,morning,120,
+EXAM_005,AI/ML,2024-12-19,afternoon,180,
+EXAM_006,Web Development,2024-12-20,morning,150,
+EXAM_007,Cloud Computing,2024-12-21,afternoon,120,
+EXAM_008,Calculus,2024-12-22,morning,180,
+EXAM_009,Linear Algebra,2024-12-23,afternoon,180,
+EXAM_010,Statistics,2024-12-24,morning,120,
