@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExamHall Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --bg:#080F1E;--bg2:#0C1628;--bg3:#111E38;--bg4:#162240;
+  --teal:#00D4C8;--teal2:#00B0A6;--tealf:rgba(0,212,200,0.1);
+  --amber:#FFAA40;--amberf:rgba(255,170,64,0.1);
+  --rose:#FF5C7A;--rosef:rgba(255,92,122,0.1);
+  --green:#22D3A6;--greenf:rgba(34,211,166,0.1);
+  --sky:#38BEFF;--skyf:rgba(56,190,255,0.1);
+  --violet:#A78BFA;--violetf:rgba(167,139,250,0.1);
+  --orange:#FB923C;--orangef:rgba(251,146,60,0.1);
+  --bdr:rgba(255,255,255,0.07);
+  --t1:#E8EDF5;--t2:#8A9ABB;--t3:#4A5A7A;
+  --card:rgba(12,22,40,0.95);
+  --sw:232px;
+  --fh:'Sora',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:var(--fh);background:var(--bg);color:var(--t1);height:100vh;display:flex;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sb{width:var(--sw);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--bdr);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:200}
+.sb-logo{padding:18px 16px 14px;border-bottom:1px solid var(--bdr)}
+.sb-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--teal),var(--sky));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:9px}
+.sb-name{font-size:15px;font-weight:800;color:#fff;letter-spacing:-0.3px}
+.sb-ver{font-size:10px;color:var(--t3);margin-top:1px}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:1px}
+.sb-sec{font-size:9px;font-weight:700;letter-spacing:0.1em;color:var(--t3);padding:12px 10px 5px;text-transform:uppercase}
+.nb{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;cursor:pointer;border:none;background:transparent;color:var(--t2);font-family:var(--fh);font-size:12px;font-weight:500;width:100%;text-align:left;transition:all .15s}
+.nb:hover{background:rgba(255,255,255,0.05);color:var(--t1)}
+.nb.on{background:var(--tealf);color:var(--teal)}
+.nb .nd{width:5px;height:5px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:all .15s}
+.nb.on .nd{background:var(--teal)}
+.nb .nbadge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:rgba(0,212,200,0.15);color:var(--teal);font-family:var(--fm)}
+.sb-foot{padding:12px;border-top:1px solid var(--bdr)}
+.sys-ok{background:var(--greenf);border:1px solid rgba(34,211,166,0.2);border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--green)}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sw);flex:1;height:100vh;overflow-y:auto;padding:24px 28px;background:var(--bg)}
+.view{display:none;animation:fu .2s ease}
+.view.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── PAGE HEADER ── */
+.ph{margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.phl h1{font-size:21px;font-weight:700;color:#fff;letter-spacing:-0.4px}
+.phl p{font-size:12px;color:var(--t2);margin-top:3px}
+.phr{display:flex;gap:8px;flex-shrink:0;align-items:center}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:13px;overflow:hidden}
+.ch{padding:13px 17px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:13px;font-weight:600;color:var(--t1)}
+.cb{padding:16px}
+.cb0{padding:0}
+
+/* ── METRICS ── */
+.mrow{display:grid;gap:11px;margin-bottom:18px}
+.mc{border-radius:12px;padding:15px 17px;border:1px solid var(--bdr);position:relative;overflow:hidden}
+.mc::after{content:'';position:absolute;top:-12px;right:-12px;width:60px;height:60px;border-radius:50%;opacity:0.1}
+.mc.c1{background:linear-gradient(135deg,rgba(0,212,200,.08),rgba(56,190,255,.03))}.mc.c1::after{background:var(--teal)}
+.mc.c2{background:linear-gradient(135deg,rgba(255,170,64,.08),rgba(255,170,64,.02))}.mc.c2::after{background:var(--amber)}
+.mc.c3{background:linear-gradient(135deg,rgba(34,211,166,.08),rgba(34,211,166,.02))}.mc.c3::after{background:var(--green)}
+.mc.c4{background:linear-gradient(135deg,rgba(255,92,122,.08),rgba(255,92,122,.02))}.mc.c4::after{background:var(--rose)}
+.mc.c5{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(167,139,250,.02))}.mc.c5::after{background:var(--violet)}
+.mc.c6{background:linear-gradient(135deg,rgba(251,146,60,.08),rgba(251,146,60,.02))}.mc.c6::after{background:var(--orange)}
+.ml{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:5px}
+.mv{font-size:26px;font-weight:800;font-family:var(--fm);letter-spacing:-.5px}
+.mc.c1 .mv{color:var(--teal)}.mc.c2 .mv{color:var(--amber)}.mc.c3 .mv{color:var(--green)}
+.mc.c4 .mv{color:var(--rose)}.mc.c5 .mv{color:var(--violet)}.mc.c6 .mv{color:var(--orange)}
+.ms{font-size:10px;color:var(--t3);margin-top:2px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;font-family:var(--fh);border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.bp{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#080F1E;box-shadow:0 3px 12px rgba(0,212,200,.25)}
+.bp:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(0,212,200,.35)}
+.bs{background:rgba(255,255,255,.07);color:var(--t1);border:1px solid var(--bdr)}
+.bs:hover{background:rgba(255,255,255,.11)}
+.bo{background:transparent;color:var(--teal);border:1px solid rgba(0,212,200,.3)}
+.bo:hover{background:var(--tealf)}
+.bd{background:var(--rosef);color:var(--rose);border:1px solid rgba(255,92,122,.2)}
+.bd:hover{background:rgba(255,92,122,.16)}
+.ba{background:var(--amberf);color:var(--amber);border:1px solid rgba(255,170,64,.2)}
+.ba:hover{background:rgba(255,170,64,.16)}
+.bg{background:var(--greenf);color:var(--green);border:1px solid rgba(34,211,166,.2)}
+.bg:hover{background:rgba(34,211,166,.16)}
+.bv{background:var(--violetf);color:var(--violet);border:1px solid rgba(167,139,250,.2)}
+.xs{padding:4px 9px;font-size:11px}
+.fw{width:100%;justify-content:center}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+
+/* ── FORMS ── */
+.fg{margin-bottom:13px}
+.fl{display:block;font-size:9px;font-weight:700;color:var(--t3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.fc{width:100%;padding:8px 11px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:7px;color:var(--t1);font-family:var(--fh);font-size:12px;transition:border-color .15s;outline:none}
+.fc:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,212,200,.1)}
+.fc option{background:var(--bg3)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.cbr{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:var(--t1)}
+.cbr input{accent-color:var(--teal);width:14px;height:14px}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:rgba(255,255,255,.04);padding:9px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--bdr)}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:10px 12px;font-size:12px;color:var(--t2);border-bottom:1px solid rgba(255,255,255,.032)}
+tbody tr:last-child td{border-bottom:none}
+.tid{font-weight:600;color:var(--t1);font-family:var(--fm);font-size:11px}
+.er td{text-align:center;color:var(--t3);padding:28px;font-size:12px}
+
+/* ── EDITABLE TABLE ── */
+.edit-table td{padding:4px 6px}
+.edit-table input,.edit-table select{background:rgba(255,255,255,.06);border:1px solid var(--bdr);border-radius:5px;color:var(--t1);font-family:var(--fm);font-size:11px;padding:4px 7px;width:100%;outline:none}
+.edit-table input:focus,.edit-table select:focus{border-color:var(--teal)}
+.edit-table tr:hover{background:rgba(255,255,255,.03)}
+.row-err{background:rgba(255,92,122,.06)!important}
+.row-ok{background:rgba(34,211,166,.04)!important}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600}
+.bt{background:var(--tealf);color:var(--teal);border:1px solid rgba(0,212,200,.17)}
+.bam{background:var(--amberf);color:var(--amber);border:1px solid rgba(255,170,64,.17)}
+.br{background:var(--rosef);color:var(--rose);border:1px solid rgba(255,92,122,.17)}
+.bgr{background:var(--greenf);color:var(--green);border:1px solid rgba(34,211,166,.17)}
+.bsk{background:var(--skyf);color:var(--sky);border:1px solid rgba(56,190,255,.17)}
+.bv2{background:var(--violetf);color:var(--violet);border:1px solid rgba(167,139,250,.17)}
+.bmu{background:rgba(255,255,255,.06);color:var(--t3)}
+.tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--fm);background:rgba(255,255,255,.06);color:var(--t2);margin:1px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;right:20px;z-index:9999;padding:10px 16px;border-radius:9px;font-size:12px;font-weight:600;transform:translateY(60px);opacity:0;transition:all .25s;pointer-events:none;max-width:300px}
+#toast.on{transform:translateY(0);opacity:1}
+#toast.ok{background:var(--greenf);border:1px solid rgba(34,211,166,.3);color:var(--green)}
+#toast.err{background:var(--rosef);border:1px solid rgba(255,92,122,.3);color:var(--rose)}
+#toast.inf{background:var(--skyf);border:1px solid rgba(56,190,255,.3);color:var(--sky)}
+#toast.wrn{background:var(--amberf);border:1px solid rgba(255,170,64,.3);color:var(--amber)}
+
+/* ── MODAL ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);z-index:600;align-items:center;justify-content:center}
+.mo.on{display:flex}
+.mb{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;width:90%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.mh{padding:17px 22px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.mh h3{font-size:15px;font-weight:700;color:#fff}
+.mx{background:rgba(255,255,255,.07);border:none;color:var(--t2);width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mx:hover{background:var(--rosef);color:var(--rose)}
+.mbody{padding:20px}
+.mft{padding:13px 22px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end}
+
+/* ── HALL POOL CARD ── */
+.hc{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:11px;padding:13px 15px;transition:border-color .15s;display:flex;align-items:flex-start;gap:10px}
+.hc:hover{border-color:rgba(255,255,255,.12)}
+.hc.hc-on{border-color:var(--teal);background:rgba(0,212,200,.04)}
+.hc.hc-off{opacity:.5}
+.hc-drag{color:var(--t3);font-size:16px;cursor:grab;padding:0 2px;user-select:none;margin-top:1px}
+.hc-drag:active{cursor:grabbing}
+.hc-num{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--fm);flex-shrink:0;margin-top:1px}
+.hc-body{flex:1}
+.hc-name{font-size:13px;font-weight:600;color:var(--t1)}
+.hc-meta{font-size:11px;color:var(--t3);margin-top:2px}
+.hc-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.hc-cap{font-size:18px;font-weight:800;font-family:var(--fm)}
+.hc-fill{height:3px;border-radius:10px;margin-top:6px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.toggle-wrap{display:flex;align-items:center;gap:6px;cursor:pointer}
+.toggle{width:34px;height:18px;border-radius:9px;border:1px solid var(--bdr);background:rgba(255,255,255,.08);position:relative;transition:all .2s;cursor:pointer}
+.toggle.on{background:var(--teal);border-color:var(--teal)}
+.toggle::after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left .2s}
+.toggle.on::after{left:18px}
+.toggle-label{font-size:10px;font-weight:600;color:var(--t3)}
+.toggle.on+.toggle-label{color:var(--teal)}
+
+/* ── BLOCKED SEAT GRID ── */
+.bsg{display:grid;gap:3px;user-select:none}
+.bseat{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:var(--fm);cursor:pointer;border:1px solid;transition:all .12s;position:relative}
+.bseat.open{background:rgba(56,190,255,.1);border-color:rgba(56,190,255,.3);color:rgba(56,190,255,.6)}
+.bseat.open:hover{background:rgba(56,190,255,.2);border-color:rgba(56,190,255,.5)}
+.bseat.blocked{background:rgba(255,92,122,.2);border-color:rgba(255,92,122,.5);color:var(--rose)}
+.bseat.blocked::after{content:'×';font-size:12px;font-weight:800;color:var(--rose)}
+.bseat.open::after{content:attr(data-label);font-size:7px;opacity:.5}
+
+/* ── SEAT GRID RESULTS ── */
+.rsg{display:grid;gap:3px}
+.rs{aspect-ratio:1;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:default;animation:si .2s ease backwards}
+@keyframes si{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.rs:hover{transform:scale(1.15);z-index:20}
+.rs-e{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04)}
+.rs-s{background:rgba(56,190,255,.15);border:1px solid rgba(56,190,255,.35)}
+.rs-f{background:rgba(255,170,64,.15);border:1px solid rgba(255,170,64,.35)}
+.rs-a{background:rgba(34,211,166,.15);border:1px solid rgba(34,211,166,.35)}
+.rs-b{background:rgba(255,92,122,.08);border:1px solid rgba(255,92,122,.2)}
+.rs-bx{font-size:11px;color:rgba(255,92,122,.4)}
+.rs-num{font-size:7px;opacity:.5;font-family:var(--fm)}
+.rs-init{font-size:9px;font-weight:800}
+.rs-tip{position:absolute;bottom:calc(100%+5px);left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:4px 8px;font-size:10px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:40;min-width:120px;text-align:center}
+.rs:hover .rs-tip{opacity:1}
+.sleg{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;padding:9px 12px;background:rgba(0,0,0,.2);border-radius:7px}
+.sli{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t2)}
+.sld{width:10px;height:10px;border-radius:3px}
+
+/* ── AUTO SELECT PREVIEW ── */
+.aps{border:1px solid var(--bdr);border-radius:11px;overflow:hidden;margin-top:14px}
+.aps-head{padding:11px 14px;background:rgba(0,212,200,.06);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:var(--teal)}
+.aps-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.aps-row:last-child{border-bottom:none}
+.aps-badge{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.cap-bar{flex:1;height:4px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
+.cap-bar-fill{height:100%;border-radius:10px;transition:width .5s}
+
+/* ── PASTE ZONE ── */
+.paste-zone{border:2px dashed rgba(56,190,255,.25);border-radius:11px;padding:24px;text-align:center;cursor:text;transition:all .18s;background:rgba(56,190,255,.02);position:relative}
+.paste-zone:hover,.paste-zone.over{border-color:var(--sky);background:rgba(56,190,255,.06)}
+.paste-zone textarea{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:text;resize:none}
+.pz-icon{font-size:28px;margin-bottom:10px}
+.pz-title{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.pz-sub{font-size:11px;color:var(--t3)}
+
+/* ── COL MAPPER ── */
+.col-map{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.cm-item{background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px}
+.cm-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.cm-sel select{width:100%;background:rgba(255,255,255,.07);border:1px solid var(--bdr);border-radius:6px;color:var(--t1);font-size:11px;padding:5px 8px;font-family:var(--fm);outline:none}
+.cm-sel select:focus{border-color:var(--teal)}
+
+/* ── RANGE INPUT ── */
+.range-form{display:flex;gap:8px;align-items:flex-end;margin-top:14px}
+.range-form .fg{margin:0;flex:1}
+.range-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;background:var(--rosef);color:var(--rose);font-size:10px;font-weight:600;font-family:var(--fm);margin:2px}
+.range-chip button{background:none;border:none;color:var(--rose);cursor:pointer;font-size:12px;padding:0;line-height:1}
+
+/* ── PROGRESS ── */
+.pbar{height:5px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden;margin-top:4px}
+.pbf{height:100%;border-radius:10px;transition:width .7s cubic-bezier(.16,1,.3,1)}
+
+/* ── STATUS BOXES ── */
+.stbox{padding:9px 13px;border-radius:8px;font-size:12px;font-weight:500;display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+.stok{background:var(--greenf);border:1px solid rgba(34,211,166,.2);color:var(--green)}
+.stwrn{background:var(--amberf);border:1px solid rgba(255,170,64,.2);color:var(--amber)}
+.sterr{background:var(--rosef);border:1px solid rgba(255,92,122,.2);color:var(--rose)}
+.stinf{background:var(--skyf);border:1px solid rgba(56,190,255,.2);color:var(--sky)}
+
+/* ── HALL TABS ── */
+.htabs{display:flex;gap:0;border-bottom:1px solid var(--bdr);overflow-x:auto;margin-bottom:16px}
+.htab{padding:9px 14px;font-size:11px;font-weight:600;cursor:pointer;color:var(--t3);border-bottom:2px solid transparent;transition:all .15s;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--fh);white-space:nowrap}
+.htab.on{color:var(--teal);border-bottom:2px solid var(--teal)}
+.htab:hover{color:var(--t1)}
+.hp{display:none}.hp.on{display:block}
+
+/* ── LAYOUT HELPERS ── */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.gap{margin-bottom:16px}
+.div{height:1px;background:var(--bdr);margin:14px 0}
+.rows{display:flex;flex-direction:column;gap:8px}
+
+/* ── HALL COLORS ── */
+.hcol0{color:var(--teal)}.hcol1{color:var(--amber)}.hcol2{color:var(--violet)}
+.hcol3{color:var(--green)}.hcol4{color:var(--sky)}.hcol5{color:var(--rose)}
+.hcol6{color:var(--orange)}
+
+@media(max-width:920px){
+  .sb{width:54px}
+  .sb-name,.sb-ver,.sb-sec,.sys-ok,.nb span:not(.nd),.nb .nbadge{display:none}
+  .main{margin-left:54px;padding:14px}
+  .mrow{grid-template-columns:1fr 1fr}
+  .two,.three,.g2,.g3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-icon">🎓</div>
+    <div class="sb-name">ExamHall Pro</div>
+    <div class="sb-ver">Multi-Hall · v3.0</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Overview</div>
+    <button class="nb on" data-view="dashboard"><span class="nd"></span><span>Dashboard</span></button>
+    <div class="sb-sec">Data</div>
+    <button class="nb" data-view="students"><span class="nd"></span><span>Students</span><span class="nbadge" id="nb-stu">0</span></button>
+    <button class="nb" data-view="exams"><span class="nd"></span><span>Exams</span><span class="nbadge" id="nb-ex">0</span></button>
+    <div class="sb-sec">Halls</div>
+    <button class="nb" data-view="hall-pool"><span class="nd"></span><span>Hall Pool</span><span class="nbadge" id="nb-halls">0</span></button>
+    <button class="nb" data-view="hall-editor"><span class="nd"></span><span>Blocked Seats</span></button>
+    <div class="sb-sec">Allocation</div>
+    <button class="nb" data-view="allocate"><span class="nd"></span><span>Run Allocation</span></button>
+    <button class="nb" data-view="results"><span class="nd"></span><span>Results</span></button>
+    <div class="sb-sec">Export</div>
+    <button class="nb" data-view="exports"><span class="nd"></span><span>CSV Export</span></button>
+  </nav>
+  <div class="sb-foot">
+    <div class="sys-ok"><span class="pulse"></span>System Active</div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+<div id="toast"></div>
+
+<!-- ── DASHBOARD ── -->
+<div id="view-dashboard" class="view on">
+  <div class="ph">
+    <div class="phl"><h1>Dashboard</h1><p>Auto-selecting multi-hall allocation system</p></div>
+    <div class="phr">
+      <button class="btn bs" onclick="loadSample()">📦 Load Sample</button>
+      <button class="btn bp" onclick="go('allocate')">▶ Run Allocation</button>
+    </div>
+  </div>
+  <div class="mrow" style="grid-template-columns:repeat(6,1fr)">
+    <div class="mc c1"><div class="ml">Students</div><div class="mv" id="m-stu">0</div><div class="ms">registered</div></div>
+    <div class="mc c2"><div class="ml">Exams</div><div class="mv" id="m-ex">0</div><div class="ms">scheduled</div></div>
+    <div class="mc c3"><div class="ml">Active Halls</div><div class="mv" id="m-ah">0</div><div class="ms">in pool</div></div>
+    <div class="mc c6"><div class="ml">Total Seats</div><div class="mv" id="m-ts">0</div><div class="ms">combined</div></div>
+    <div class="mc c4"><div class="ml">Special Needs</div><div class="mv" id="m-sn">0</div><div class="ms">students</div></div>
+    <div class="mc c5"><div class="ml">Allocations</div><div class="mv" id="m-al">0</div><div class="ms">completed</div></div>
+  </div>
+  <div class="two gap">
+    <div class="card">
+      <div class="ch"><span class="ct">⚡ Quick Actions</span></div>
+      <div class="cb">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn bs fw" style="justify-content:flex-start;padding:11px 13px" onclick="go('students');showPastePanel()">📋 Paste from Excel</button>
+          <button class="btn bs fw" style="justify-content:flex-start;padding:11px 13px" onclick="openStudentModal()">👤 Add Student</button>
+          <button class="btn bs fw" style="justify-content:flex-start;padding:11px 13px" onclick="openExamModal()">📝 Add Exam</button>
+          <button class="btn bs fw" style="justify-content:flex-start;padding:11px 13px" onclick="openHallModal()">🏛 Add Hall</button>
+          <button class="btn bp fw" style="justify-content:flex-start;padding:11px 13px;grid-column:1/-1" onclick="go('allocate')">🚀 Auto-Allocate All Students</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">📋 Activity Log</span></div>
+      <div class="cb" id="act-feed" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:1px">
+        <div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">No activity yet</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">🏛 Hall Pool Overview</span><button class="btn bo xs" onclick="go('hall-pool')">Manage Halls</button></div>
+    <div class="cb" id="dash-halls">
+      <div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">No halls yet. <button class="btn bo xs" onclick="openHallModal()">Add First Hall</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STUDENTS ── -->
+<div id="view-students" class="view">
+  <div class="ph">
+    <div class="phl"><h1>Students</h1><p>Add individually, paste from Excel, or upload CSV</p></div>
+    <div class="phr">
+      <input id="stu-q" class="fc" style="width:170px" placeholder="🔍 Search..." oninput="renderStudents()">
+      <button class="btn ba" onclick="showPastePanel()">📋 Paste Excel</button>
+      <button class="btn bs" onclick="exportStudentsCSV()">Export CSV</button>
+      <button class="btn bp" onclick="openStudentModal()">+ Add Student</button>
+    </div>
+  </div>
+
+  <!-- Paste Panel -->
+  <div id="paste-panel" class="card gap" style="display:none">
+    <div class="ch">
+      <span class="ct" style="color:var(--sky)">📋 Paste from Excel</span>
+      <button class="btn bd xs" onclick="hidePastePanel()">✕ Close</button>
+    </div>
+    <div class="cb">
+      <!-- Step 1: Paste Area -->
+      <div id="paste-step-1">
+        <p style="font-size:12px;color:var(--t2);margin-bottom:12px">Copy rows from Excel/Google Sheets then click below and press <kbd style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px;font-family:var(--fm);font-size:11px">Ctrl+V</kbd></p>
+        <div class="paste-zone" id="paste-zone">
+          <textarea id="paste-ta" onpaste="handlePaste(event)" placeholder="Click here, then paste (Ctrl+V)"></textarea>
+          <div class="pz-icon">📊</div>
+          <div class="pz-title">Click here, then paste your Excel data</div>
+          <div class="pz-sub">Works with any Excel or Google Sheets selection</div>
+        </div>
+      </div>
+      <!-- Step 2: Column Mapper -->
+      <div id="paste-step-2" style="display:none">
+        <div class="stinf stbox gap">ℹ️ <span>We detected <strong id="paste-cols-count">0</strong> columns. Map each column to a student field below.</span></div>
+        <div class="col-map" id="col-mapper"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn bs" onclick="resetPaste()">← Back</button>
+          <button class="btn bp" onclick="applyColMap()">Apply Mapping →</button>
+        </div>
+      </div>
+      <!-- Step 3: Editable Table -->
+      <div id="paste-step-3" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:12px;color:var(--t2)"><strong id="paste-valid-count" style="color:var(--green)">0</strong> valid · <strong id="paste-err-count" style="color:var(--rose)">0</strong> errors</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn bs xs" onclick="addPasteRow()">+ Add Row</button>
+            <button class="btn bs xs" onclick="resetPaste()">← Back</button>
+            <button class="btn bp xs" onclick="confirmPaste()">✅ Import All</button>
+          </div>
+        </div>
+        <div class="tw" style="max-height:300px;overflow-y:auto;border-radius:8px;border:1px solid var(--bdr)">
+          <table>
+            <thead><tr><th>#</th><th>Student ID</th><th>Name</th><th>Department</th><th>Year</th><th>Subjects</th><th>Special Needs</th><th></th></tr></thead>
+            <tbody id="paste-tbody" class="edit-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CSV Upload -->
+  <div class="card gap" id="stu-upload-card">
+    <div class="ch"><span class="ct">📤 Upload Students CSV</span></div>
+    <div class="cb">
+      <div style="border:2px dashed rgba(0,212,200,.2);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all .18s;background:rgba(0,212,200,.02)" onclick="document.getElementById('stu-file').click()" ondragover="event.preventDefault();this.style.borderColor='var(--teal)'" ondragleave="this.style.borderColor='rgba(0,212,200,.2)'" ondrop="event.preventDefault();handleCSVFile(event.dataTransfer.files[0],'students');this.style.borderColor='rgba(0,212,200,.2)'">
+        <div style="font-size:22px;margin-bottom:6px">📤</div>
+        <div style="font-size:12px;color:var(--t2);font-weight:600">Drop CSV or click · Columns: ID, Name, Department, Year, Subjects, SpecialNeeds</div>
+        <input type="file" id="stu-file" accept=".csv" style="display:none" onchange="handleCSVFile(this.files[0],'students')">
+      </div>
+      <div id="stu-csv-prev" style="display:none;margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- Students Table -->
+  <div class="card">
+    <div class="ch"><span class="ct">All Students</span><span id="stu-count-badge" class="badge bt">0 total</span></div>
+    <div class="cb0">
+      <div class="tw">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Year</th><th>Subjects</th><th>Spec.</th><th>Source</th><th>Actions</th></tr></thead>
+          <tbody id="stu-tbody"><tr class="er"><td colspan="8">No students yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EXAMS ── -->
+<div id="view-exams" class="view">
+  <div class="ph">
+    <div class="phl"><h1>Exams</h1><p>Scheduled examinations</p></div>
+    <div class="phr">
+      <input id="ex-q" class="fc" style="width:170px" placeholder="🔍 Search..." oninput="renderExams()">
+      <button class="btn bs" onclick="exportExamsCSV()">Export CSV</button>
+      <button class="btn bp" onclick="openExamModal()">+ Add Exam</button>
+    </div>
+  </div>
+
+  <!-- Exam CSV Upload -->
+  <div class="card gap">
+    <div class="ch"><span class="ct">📤 Upload Exams CSV</span></div>
+    <div class="cb">
+      <div style="border:2px dashed rgba(0,212,200,.2);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all .18s;background:rgba(0,212,200,.02)"
+        onclick="document.getElementById('ex-file').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--teal)'"
+        ondragleave="this.style.borderColor='rgba(0,212,200,.2)'"
+        ondrop="event.preventDefault();handleCSVFile(event.dataTransfer.files[0],'exams');this.style.borderColor='rgba(0,212,200,.2)'">
+        <div style="font-size:22px;margin-bottom:6px">📤</div>
+        <div style="font-size:12px;color:var(--t2);font-weight:600;margin-bottom:3px">Drop CSV or click to browse</div>
+        <div style="font-size:11px;color:var(--t3)">Columns: <span style="font-family:var(--fm)">ID, Subject, Date, TimeSlot, Duration, Requirements</span></div>
+        <input type="file" id="ex-file" accept=".csv" style="display:none" onchange="handleCSVFile(this.files[0],'exams')">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn bs xs" onclick="dlTemplate('exams')" style="flex:1">⬇ Download Exams Template</button>
+      </div>
+      <div id="ex-csv-prev" style="display:none;margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- Exams Table -->
+  <div class="card">
+    <div class="cb0">
+      <div class="tw">
+        <table>
+          <thead><tr><th>ID</th><th>Subject</th><th>Date</th><th>Time</th><th>Duration</th><th>Eligible Students</th><th>Source</th><th>Actions</th></tr></thead>
+          <tbody id="ex-tbody"><tr class="er"><td colspan="8">No exams yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HALL POOL ── -->
+<div id="view-hall-pool" class="view">
+  <div class="ph">
+    <div class="phl"><h1>Hall Pool</h1><p>Largest-first auto-selection · toggle active/inactive · drag to set manual priority</p></div>
+    <div class="phr">
+      <button class="btn bs" onclick="sortHallsByCapacity()">↕ Sort by Size</button>
+      <button class="btn bp" onclick="openHallModal()">+ Add Hall</button>
+    </div>
+  </div>
+
+  <!-- Hall CSV Upload -->
+  <div class="card gap">
+    <div class="ch"><span class="ct">📤 Upload Halls CSV</span></div>
+    <div class="cb">
+      <div style="border:2px dashed rgba(167,139,250,.25);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all .18s;background:rgba(167,139,250,.03)"
+        onclick="document.getElementById('hall-file').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--violet)';this.style.background='rgba(167,139,250,.07)'"
+        ondragleave="this.style.borderColor='rgba(167,139,250,.25)';this.style.background='rgba(167,139,250,.03)'"
+        ondrop="event.preventDefault();handleCSVFile(event.dataTransfer.files[0],'halls');this.style.borderColor='rgba(167,139,250,.25)';this.style.background='rgba(167,139,250,.03)'">
+        <div style="font-size:26px;margin-bottom:8px">🏛</div>
+        <div style="font-size:13px;color:var(--t1);font-weight:600;margin-bottom:4px">Drop Halls CSV here or click to browse</div>
+        <div style="font-size:11px;color:var(--t3)">
+          Required columns: <span style="font-family:var(--fm);color:var(--violet)">ID, Name, Block, Floor, RoomType, Rows, Cols, Active</span>
+        </div>
+        <input type="file" id="hall-file" accept=".csv" style="display:none" onchange="handleCSVFile(this.files[0],'halls')">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn bv xs fw" onclick="dlTemplate('halls')">⬇ Download Halls Template</button>
+      </div>
+      <div style="margin-top:10px;padding:10px 13px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr)">
+        <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px">RoomType values accepted</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="tag" style="color:var(--teal)">small</span>
+          <span style="font-size:10px;color:var(--t3)">6×5=30</span>
+          <span class="tag" style="color:var(--teal)">standard</span>
+          <span style="font-size:10px;color:var(--t3)">8×6=48</span>
+          <span class="tag" style="color:var(--teal)">large</span>
+          <span style="font-size:10px;color:var(--t3)">12×8=96</span>
+          <span class="tag" style="color:var(--teal)">auditorium</span>
+          <span style="font-size:10px;color:var(--t3)">15×10=150</span>
+          <span class="tag" style="color:var(--violet)">custom</span>
+          <span style="font-size:10px;color:var(--t3)">uses Rows×Cols</span>
+        </div>
+      </div>
+      <div id="hall-csv-prev" style="display:none;margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div>
+      <div class="card gap">
+        <div class="ch"><span class="ct">🏛 Halls <span id="hpool-badge" class="badge bt" style="margin-left:6px">0</span></span><span style="font-size:10px;color:var(--t3)">Drag to reorder · toggle to enable/disable</span></div>
+        <div class="cb">
+          <div id="hpool-list" class="rows">
+            <div style="color:var(--t3);font-size:12px;text-align:center;padding:24px 0">No halls yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card gap">
+        <div class="ch"><span class="ct">📊 Pool Capacity</span></div>
+        <div class="cb" id="pool-cap"></div>
+      </div>
+      <div class="card gap">
+        <div class="ch"><span class="ct">💡 Room Types</span></div>
+        <div class="cb">
+          <div class="rows">
+            <div style="padding:9px 11px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);font-size:12px"><strong style="color:var(--teal)">Small</strong> <span style="color:var(--t3)">— 6×5 = </span><strong style="font-family:var(--fm)">30</strong> seats</div>
+            <div style="padding:9px 11px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);font-size:12px"><strong style="color:var(--teal)">Standard</strong> <span style="color:var(--t3)">— 8×6 = </span><strong style="font-family:var(--fm)">48</strong> seats</div>
+            <div style="padding:9px 11px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);font-size:12px"><strong style="color:var(--teal)">Large</strong> <span style="color:var(--t3)">— 12×8 = </span><strong style="font-family:var(--fm)">96</strong> seats</div>
+            <div style="padding:9px 11px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);font-size:12px"><strong style="color:var(--teal)">Auditorium</strong> <span style="color:var(--t3)">— 15×10 = </span><strong style="font-family:var(--fm)">150</strong> seats</div>
+            <div style="padding:9px 11px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);font-size:12px"><strong style="color:var(--violet)">Custom</strong> <span style="color:var(--t3)">— your rows × cols</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── HALL EDITOR (BLOCKED SEATS) ── -->
+<div id="view-hall-editor" class="view">
+  <div class="ph">
+    <div class="phl"><h1>Blocked Seats</h1><p>Click seats or enter ranges to mark unavailable seats in each hall</p></div>
+    <div class="phr">
+      <select id="he-hall-sel" class="fc" style="width:220px" onchange="loadHallEditor()">
+        <option value="">Select a hall...</option>
+      </select>
+    </div>
+  </div>
+  <div id="he-empty" style="text-align:center;padding:60px 0;color:var(--t3)">
+    <div style="font-size:40px;margin-bottom:12px">🏛</div>
+    <div style="font-size:14px;color:var(--t2)">Select a hall above to configure blocked seats</div>
+  </div>
+  <div id="he-content" style="display:none">
+    <div class="two gap">
+      <!-- Grid -->
+      <div class="card">
+        <div class="ch">
+          <span class="ct" id="he-hall-name">Hall</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge br" id="he-blocked-count">0 blocked</span>
+            <button class="btn bd xs" onclick="clearAllBlocked()">Clear All</button>
+            <button class="btn bg xs" onclick="saveBlocked()">Save</button>
+          </div>
+        </div>
+        <div class="cb">
+          <div style="margin-bottom:10px;padding:7px 10px;background:rgba(0,0,0,.2);border-radius:6px;font-size:10px;color:var(--t3)">📋 Front of Room — click any seat to toggle blocked</div>
+          <div id="he-grid" class="bsg"></div>
+          <div style="margin-top:12px;display:flex;gap:12px">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(56,190,255,.15);border:1px solid rgba(56,190,255,.4)"></div>Available</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)"><div style="width:12px;height:12px;border-radius:3px;background:rgba(255,92,122,.2);border:1px solid rgba(255,92,122,.5)"></div>Blocked</div>
+          </div>
+        </div>
+      </div>
+      <!-- Range Input -->
+      <div>
+        <div class="card gap">
+          <div class="ch"><span class="ct">📐 Block by Range</span></div>
+          <div class="cb">
+            <p style="font-size:12px;color:var(--t2);margin-bottom:14px">Enter row/column ranges to block multiple seats at once.</p>
+            <div class="g2">
+              <div class="fg"><label class="fl">From Row</label><input type="number" id="rng-r1" class="fc" min="1" placeholder="1"></div>
+              <div class="fg"><label class="fl">To Row</label><input type="number" id="rng-r2" class="fc" min="1" placeholder="1"></div>
+            </div>
+            <div class="g2">
+              <div class="fg"><label class="fl">From Col</label><input type="number" id="rng-c1" class="fc" min="1" placeholder="1"></div>
+              <div class="fg"><label class="fl">To Col</label><input type="number" id="rng-c2" class="fc" min="1" placeholder="1"></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn bd fw" onclick="blockRange()">🚫 Block Range</button>
+              <button class="btn bg fw" onclick="unblockRange()">✅ Unblock Range</button>
+            </div>
+            <div class="div"></div>
+            <div style="font-size:11px;color:var(--t3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Active Blocked Ranges</div>
+            <div id="rng-chips" style="min-height:30px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">📊 Hall Stats</span></div>
+          <div class="cb" id="he-stats"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ALLOCATE ── -->
+<div id="view-allocate" class="view">
+  <div class="ph">
+    <div class="phl"><h1>Auto Allocation</h1><p>System picks halls largest-first · subject interleaving · guaranteed full placement</p></div>
+  </div>
+  <div class="two gap">
+    <!-- Config -->
+    <div class="card">
+      <div class="ch"><span class="ct">⚙️ Configuration</span></div>
+      <div class="cb">
+        <div class="fg">
+          <label class="fl">Select Exam</label>
+          <select id="al-exam" class="fc" onchange="updateAllocPreview()">
+            <option value="">Choose an exam...</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Minimum Seat Distance</label>
+          <div style="padding:12px;background:rgba(0,0,0,.2);border-radius:8px;border:1px solid var(--bdr)">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+              <div style="font-size:28px;font-weight:800;font-family:var(--fm);color:var(--teal);min-width:44px;text-align:center" id="al-dv">2</div>
+              <input type="range" id="al-dist" min="1" max="5" step="1" value="2" class="fc" style="padding:0;background:rgba(255,255,255,.1);height:5px;border:none;border-radius:10px;outline:none;cursor:pointer;-webkit-appearance:none" oninput="document.getElementById('al-dv').textContent=this.value;updateAllocPreview()">
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--t3)">
+              <span>1·dense</span><span>2·standard</span><span>3·spacious</span><span>4·pandemic</span><span>5·max</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          <label class="cbr"><input type="checkbox" id="al-sn" checked> Prioritise special needs (front rows first)</label>
+          <label class="cbr"><input type="checkbox" id="al-int" checked> Subject interleaving (anti-cheating spread)</label>
+          <label class="cbr"><input type="checkbox" id="al-auto" checked> Auto-select halls (largest first)</label>
+        </div>
+        <div class="div"></div>
+        <div id="al-status-box" class="stbox stinf gap">Select an exam to preview auto-selection</div>
+        <button class="btn bp fw" id="al-run-btn" onclick="runAllocation()" disabled>🚀 Allocate All Students</button>
+      </div>
+    </div>
+    <!-- Preview -->
+    <div>
+      <div class="card gap">
+        <div class="ch"><span class="ct">🏛 Auto-Selected Halls Preview</span></div>
+        <div class="cb">
+          <div id="al-preview">
+            <div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">Select an exam to see which halls will be used</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">🔀 Interleave Preview</span></div>
+        <div class="cb">
+          <div id="al-interleave" style="min-height:40px">
+            <div style="color:var(--t3);font-size:12px;text-align:center;padding:14px 0">Select an exam to preview</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div id="view-results" class="view">
+  <div class="ph">
+    <div class="phl"><h1>Allocation Results</h1><p id="res-sub">No allocation run yet</p></div>
+    <div class="phr" id="res-actions" style="display:none">
+      <button class="btn bs" onclick="exportMasterCSV()">📥 Master CSV</button>
+      <button class="btn bs" onclick="exportAllHalls()">📦 All Halls CSVs</button>
+      <button class="btn bp" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+  <div id="res-empty" style="text-align:center;padding:60px 0;color:var(--t3)">
+    <div style="font-size:48px;margin-bottom:14px">🪑</div>
+    <div style="font-size:15px;font-weight:600;color:var(--t2);margin-bottom:6px">No results yet</div>
+    <button class="btn bp" onclick="go('allocate')">▶ Run Allocation</button>
+  </div>
+  <div id="res-content" style="display:none">
+    <div class="mrow" id="res-metrics" style="grid-template-columns:repeat(5,1fr)"></div>
+    <div class="card gap">
+      <div class="ch"><span class="ct">📋 Master Assignment</span><button class="btn bs xs" onclick="exportMasterCSV()">CSV</button></div>
+      <div class="cb0">
+        <div class="tw" style="max-height:320px;overflow-y:auto">
+          <table>
+            <thead><tr><th>Hall</th><th>Seat</th><th>Student ID</th><th>Name</th><th>Dept</th><th>Year</th><th>Subject</th><th>Spec.</th></tr></thead>
+            <tbody id="master-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card gap">
+      <div class="ch"><span class="ct">🏫 Per-Hall Seat Grids</span></div>
+      <div class="cb">
+        <div class="htabs" id="res-tabs"></div>
+        <div id="res-panels"></div>
+      </div>
+    </div>
+    <div class="card" id="unalloc-card" style="display:none">
+      <div class="ch"><span class="ct" style="color:var(--rose)">⚠️ Could Not Be Placed</span></div>
+      <div class="cb" id="unalloc-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── EXPORTS ── -->
+<div id="view-exports" class="view">
+  <div class="ph"><div class="phl"><h1>CSV Export</h1><p>Download data in various formats</p></div></div>
+  <div class="three gap">
+    <div class="card">
+      <div class="ch"><span class="ct">👥 Students</span></div>
+      <div class="cb">
+        <p style="font-size:12px;color:var(--t2);margin-bottom:14px">Export all registered students as CSV.</p>
+        <button class="btn bp fw" onclick="exportStudentsCSV()">⬇ Export Students CSV</button>
+        <div class="div"></div>
+        <button class="btn bs fw" onclick="dlTemplate('students')">Template File</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">📝 Exams</span></div>
+      <div class="cb">
+        <p style="font-size:12px;color:var(--t2);margin-bottom:14px">Export all scheduled exams as CSV.</p>
+        <button class="btn bp fw" onclick="exportExamsCSV()">⬇ Export Exams CSV</button>
+        <div class="div"></div>
+        <button class="btn bs fw" onclick="dlTemplate('exams')">Template File</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">🏛 Halls</span></div>
+      <div class="cb">
+        <p style="font-size:12px;color:var(--t2);margin-bottom:14px">Export hall configurations as CSV.</p>
+        <button class="btn bp fw" onclick="exportHallsCSV()">⬇ Export Halls CSV</button>
+        <div class="div"></div>
+        <button class="btn bs fw" onclick="dlTemplate('halls')">Template File</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">📦 Allocation Exports</span></div>
+    <div class="cb">
+      <div id="exp-alloc">
+        <div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">Run an allocation first to enable these exports</div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Student Modal -->
+<div class="mo" id="m-student">
+  <div class="mb">
+    <div class="mh"><h3 id="sm-title">Add Student</h3><button class="mx" onclick="closeModal('m-student')">✕</button></div>
+    <div class="mbody">
+      <div class="g2">
+        <div class="fg"><label class="fl">Student ID</label><input type="text" id="sm-id" class="fc" placeholder="STU_001"></div>
+        <div class="fg"><label class="fl">Full Name *</label><input type="text" id="sm-name" class="fc" placeholder="Alice Johnson"></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Department *</label><input type="text" id="sm-dept" class="fc" placeholder="Computer Science"></div>
+        <div class="fg"><label class="fl">Year *</label><input type="number" id="sm-year" class="fc" min="1" max="5" placeholder="2"></div>
+      </div>
+      <div class="fg"><label class="fl">Subjects (comma-separated) *</label><input type="text" id="sm-subs" class="fc" placeholder="Data Structures, Algorithms"></div>
+      <label class="cbr"><input type="checkbox" id="sm-sn"> Special Needs Accommodation</label>
+    </div>
+    <div class="mft">
+      <button class="btn bs" onclick="closeModal('m-student')">Cancel</button>
+      <button class="btn bp" onclick="saveStudent()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exam Modal -->
+<div class="mo" id="m-exam">
+  <div class="mb">
+    <div class="mh"><h3 id="em-title">Add Exam</h3><button class="mx" onclick="closeModal('m-exam')">✕</button></div>
+    <div class="mbody">
+      <div class="g2">
+        <div class="fg"><label class="fl">Exam ID</label><input type="text" id="em-id" class="fc" placeholder="EXAM_001"></div>
+        <div class="fg"><label class="fl">Subject *</label><input type="text" id="em-sub" class="fc" placeholder="Data Structures"></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Date *</label><input type="date" id="em-date" class="fc"></div>
+        <div class="fg"><label class="fl">Time Slot</label><select id="em-slot" class="fc"><option value="morning">Morning</option><option value="afternoon">Afternoon</option><option value="evening">Evening</option></select></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Duration (min)</label><input type="number" id="em-dur" class="fc" value="120" min="30"></div>
+        <div class="fg"><label class="fl">Requirements</label><input type="text" id="em-req" class="fc" placeholder="isolated, calculator"></div>
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn bs" onclick="closeModal('m-exam')">Cancel</button>
+      <button class="btn bp" onclick="saveExam()">Save Exam</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hall Modal -->
+<div class="mo" id="m-hall">
+  <div class="mb" style="max-width:520px">
+    <div class="mh"><h3 id="hm-title">Add Exam Hall</h3><button class="mx" onclick="closeModal('m-hall')">✕</button></div>
+    <div class="mbody">
+      <div class="g2">
+        <div class="fg"><label class="fl">Hall ID</label><input type="text" id="hm-id" class="fc" placeholder="HALL_001"></div>
+        <div class="fg"><label class="fl">Hall Name *</label><input type="text" id="hm-name" class="fc" placeholder="Block A — Room 101"></div>
+      </div>
+      <div class="g2">
+        <div class="fg"><label class="fl">Block / Building</label><input type="text" id="hm-block" class="fc" placeholder="Block A"></div>
+        <div class="fg"><label class="fl">Floor</label><input type="text" id="hm-floor" class="fc" placeholder="Ground Floor"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Room Type</label>
+        <select id="hm-type" class="fc" onchange="hm_typeChange()">
+          <option value="small">Small — 6×5 = 30 seats</option>
+          <option value="standard" selected>Standard — 8×6 = 48 seats</option>
+          <option value="large">Large Hall — 12×8 = 96 seats</option>
+          <option value="auditorium">Auditorium — 15×10 = 150 seats</option>
+          <option value="custom">Custom dimensions…</option>
+        </select>
+      </div>
+      <div id="hm-custom" style="display:none">
+        <div class="g2">
+          <div class="fg"><label class="fl">Rows *</label><input type="number" id="hm-rows" class="fc" min="1" max="30" value="7" oninput="hm_capPreview()"></div>
+          <div class="fg"><label class="fl">Columns *</label><input type="number" id="hm-cols" class="fc" min="1" max="30" value="7" oninput="hm_capPreview()"></div>
+        </div>
+      </div>
+      <div id="hm-prev" style="padding:9px 12px;background:var(--tealf);border:1px solid rgba(0,212,200,.2);border-radius:7px;font-size:12px;color:var(--teal)">
+        This hall will have <strong>48 seats</strong> (8 cols × 6 rows)
+      </div>
+    </div>
+    <div class="mft">
+      <button class="btn bs" onclick="closeModal('m-hall')">Cancel</button>
+      <button class="btn bp" onclick="saveHall()">Save Hall</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCRIPT ═══ -->
+<script>
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+const S = {
+  students: [], exams: [], halls: [],
+  allocCount: 0, lastResult: null,
+  editStu: null, editEx: null, editHall: null,
+  log: [],
+  pasteRaw: [], pasteHeaders: [],
+  currentEditorHall: null,
+  blockedEdits: {}   // hallId → Set of "r,c"
+};
+
+const RCFG = {
+  small:      {cols:6,  rows:5,  cap:30},
+  standard:   {cols:8,  rows:6,  cap:48},
+  large:      {cols:12, rows:8,  cap:96},
+  auditorium: {cols:15, rows:10, cap:150}
+};
+const HCOLS = ['#00D4C8','#FFAA40','#A78BFA','#22D3A6','#38BEFF','#FF5C7A','#FB923C'];
+const SCOLS = ['#00D4C8','#FFAA40','#A78BFA','#22D3A6','#38BEFF','#FF5C7A','#FB923C','#34D399'];
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nb').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+  // Slider thumb style
+  const s = document.createElement('style');
+  s.textContent = `#al-dist::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--teal);border:3px solid var(--bg);cursor:pointer;transition:transform .12s}#al-dist:hover::-webkit-slider-thumb{transform:scale(1.2)}`;
+  document.head.appendChild(s);
+  updateNav();
+});
+
+function go(view) {
+  document.querySelectorAll('.nb').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === `view-${view}`));
+  if (view === 'dashboard') renderDashboard();
+  if (view === 'students') renderStudents();
+  if (view === 'exams') renderExams();
+  if (view === 'hall-pool') renderHallPool();
+  if (view === 'hall-editor') loadHallEditorList();
+  if (view === 'allocate') { populateAllocDropdown(); updateAllocPreview(); }
+  if (view === 'results') renderResults();
+  if (view === 'exports') renderExports();
+}
+
+function updateNav() {
+  document.getElementById('nb-stu').textContent = S.students.length;
+  document.getElementById('nb-ex').textContent = S.exams.length;
+  document.getElementById('nb-halls').textContent = S.halls.filter(h=>h.active).length + '/' + S.halls.length;
+}
+
+// ══════════════════════════════════════════════════
+// SAMPLE DATA
+// ══════════════════════════════════════════════════
+function loadSample() {
+  S.students = [
+    {id:'STU_001',name:'Alice Johnson',dept:'CSE',year:2,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_002',name:'Bob Smith',dept:'CSE',year:2,subjects:['Data Structures'],sn:true,src:'Sample'},
+    {id:'STU_003',name:'Carol White',dept:'Math',year:3,subjects:['Calculus'],sn:false,src:'Sample'},
+    {id:'STU_004',name:'David Lee',dept:'CSE',year:2,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_005',name:'Emma Davis',dept:'CSE',year:1,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_006',name:'Frank Miller',dept:'ECE',year:2,subjects:['Circuits'],sn:false,src:'Sample'},
+    {id:'STU_007',name:'Grace Wilson',dept:'Math',year:2,subjects:['Calculus'],sn:true,src:'Sample'},
+    {id:'STU_008',name:'Henry Brown',dept:'CSE',year:3,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_009',name:'Ivy Jones',dept:'CSE',year:2,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_010',name:'Jack Taylor',dept:'ECE',year:1,subjects:['Circuits'],sn:false,src:'Sample'},
+    {id:'STU_011',name:'Kate Anderson',dept:'CSE',year:2,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_012',name:'Liam Thomas',dept:'Math',year:3,subjects:['Calculus'],sn:false,src:'Sample'},
+    {id:'STU_013',name:'Maya Patel',dept:'CSE',year:2,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_014',name:'Noah Kim',dept:'CSE',year:1,subjects:['Data Structures'],sn:false,src:'Sample'},
+    {id:'STU_015',name:'Olivia Chen',dept:'Math',year:2,subjects:['Calculus'],sn:false,src:'Sample'},
+  ];
+  S.exams = [
+    {id:'EXAM_001',subject:'Data Structures',date:'2025-12-15',slot:'morning',dur:180,req:[],src:'Sample'},
+    {id:'EXAM_002',subject:'Calculus',date:'2025-12-16',slot:'morning',dur:120,req:[],src:'Sample'},
+    {id:'EXAM_003',subject:'Circuits',date:'2025-12-17',slot:'afternoon',dur:150,req:[],src:'Sample'},
+  ];
+  S.halls = [
+    {id:'HALL_001',name:'Block A — Room 101',block:'Block A',floor:'Ground',type:'standard',cols:8,rows:6,cap:48,active:true,blocked:new Set(),priority:0},
+    {id:'HALL_002',name:'Block A — Room 102',block:'Block A',floor:'Ground',type:'standard',cols:8,rows:6,cap:48,active:true,blocked:new Set(),priority:1},
+    {id:'HALL_003',name:'Block B — Main Hall',block:'Block B',floor:'First',type:'large',cols:12,rows:8,cap:96,active:true,blocked:new Set(),priority:2},
+    {id:'HALL_004',name:'Block C — Auditorium',block:'Block C',floor:'Ground',type:'auditorium',cols:15,rows:10,cap:150,active:false,blocked:new Set(),priority:3},
+  ];
+  log('Loaded sample: 15 students, 3 exams, 4 halls', 'ℹ️');
+  updateNav(); renderDashboard();
+  toast('Sample data loaded', 'ok');
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard() {
+  const active = S.halls.filter(h=>h.active);
+  const totalCap = active.reduce((s,h)=>s+h.cap,0);
+  document.getElementById('m-stu').textContent = S.students.length;
+  document.getElementById('m-ex').textContent = S.exams.length;
+  document.getElementById('m-ah').textContent = active.length;
+  document.getElementById('m-ts').textContent = totalCap;
+  document.getElementById('m-sn').textContent = S.students.filter(s=>s.sn).length;
+  document.getElementById('m-al').textContent = S.allocCount;
+  // Activity
+  const feed = document.getElementById('act-feed');
+  const logs = [...S.log].reverse().slice(0,8);
+  feed.innerHTML = logs.length ? logs.map(l=>`<div style="display:flex;gap:7px;padding:6px 0;border-bottom:1px solid var(--bdr);font-size:11px"><span style="flex-shrink:0">${l.icon}</span><div><div style="color:var(--t2)">${l.msg}</div><div style="color:var(--t3);font-size:9px;font-family:var(--fm)">${l.time}</div></div></div>`).join('') :
+    `<div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">No activity yet</div>`;
+  // Hall overview
+  const dh = document.getElementById('dash-halls');
+  if(!S.halls.length){dh.innerHTML=`<div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">No halls. <button class="btn bo xs" onclick="openHallModal()">Add First Hall</button></div>`;return;}
+  const sorted = [...S.halls].sort((a,b)=>b.cap-a.cap);
+  dh.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">`+
+    sorted.map((h,i)=>{
+      const blocked=h.blocked?h.blocked.size:0;
+      const eff=h.cap-blocked;
+      return `<div style="padding:12px;background:rgba(255,255,255,.03);border-radius:9px;border:1px solid ${h.active?'var(--bdr)':'rgba(255,255,255,.03)'}; opacity:${h.active?1:.5}">
+        <div style="font-size:11px;font-weight:700;color:${HCOLS[i%HCOLS.length]};margin-bottom:3px;display:flex;align-items:center;gap:5px">
+          ${h.name}<span class="badge ${h.active?'bgr':'bmu'}" style="font-size:9px">${h.active?'Active':'Off'}</span>
+        </div>
+        <div style="font-size:10px;color:var(--t3)">${h.type} · <strong style="font-family:var(--fm);color:${HCOLS[i%HCOLS.length]}">${eff}</strong> avail. seats${blocked?' ('+blocked+' blocked)':''}</div>
+      </div>`;
+    }).join('') + `</div>`;
+}
+
+function log(msg, icon='✅') {
+  S.log.push({msg, icon, time: new Date().toLocaleTimeString()});
+}
+
+// ══════════════════════════════════════════════════
+// STUDENTS
+// ══════════════════════════════════════════════════
+function renderStudents() {
+  const q = (document.getElementById('stu-q')?.value||'').toLowerCase();
+  const tbody = document.getElementById('stu-tbody');
+  const f = S.students.filter(s=>s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q)||s.dept.toLowerCase().includes(q));
+  document.getElementById('stu-count-badge').textContent = S.students.length + ' total';
+  tbody.innerHTML = f.length ? f.map(s=>`<tr>
+    <td class="tid">${s.id}</td>
+    <td style="color:var(--t1);font-weight:500">${s.name}</td>
+    <td>${s.dept}</td>
+    <td><span class="badge bsk">Y${s.year}</span></td>
+    <td>${s.subjects.map(x=>`<span class="tag">${x}</span>`).join('')}</td>
+    <td>${s.sn?'<span class="badge bgr">♿</span>':'—'}</td>
+    <td><span class="badge ${s.src==='CSV'||s.src==='Excel'?'bam':'bmu'}">${s.src||'Manual'}</span></td>
+    <td><button class="btn bs xs" onclick="openStudentModal('${s.id}')">Edit</button> <button class="btn bd xs" onclick="delStudent('${s.id}')">Del</button></td>
+  </tr>`).join('') : `<tr class="er"><td colspan="8">No students found.</td></tr>`;
+}
+
+function openStudentModal(id=null) {
+  S.editStu = id;
+  document.getElementById('sm-title').textContent = id?'Edit Student':'Add Student';
+  if(id){const s=S.students.find(x=>x.id===id);document.getElementById('sm-id').value=s.id;document.getElementById('sm-name').value=s.name;document.getElementById('sm-dept').value=s.dept;document.getElementById('sm-year').value=s.year;document.getElementById('sm-subs').value=s.subjects.join(', ');document.getElementById('sm-sn').checked=s.sn;}
+  else{document.getElementById('sm-id').value='STU_'+String(S.students.length+1).padStart(3,'0');['sm-name','sm-dept','sm-year','sm-subs'].forEach(x=>document.getElementById(x).value='');document.getElementById('sm-sn').checked=false;}
+  showModal('m-student');
+}
+
+function saveStudent() {
+  const id=document.getElementById('sm-id').value.trim();
+  const name=document.getElementById('sm-name').value.trim();
+  const dept=document.getElementById('sm-dept').value.trim();
+  const year=parseInt(document.getElementById('sm-year').value);
+  const subjects=document.getElementById('sm-subs').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const sn=document.getElementById('sm-sn').checked;
+  if(!name||!dept||!year||!subjects.length){toast('Fill required fields','err');return;}
+  if(S.editStu){const i=S.students.findIndex(s=>s.id===S.editStu);if(i!==-1)S.students[i]={...S.students[i],name,dept,year,subjects,sn};log(`Updated: ${name}`,'✏️');}
+  else{S.students.push({id:id||'STU_'+Date.now(),name,dept,year,subjects,sn,src:'Manual'});log(`Added: ${name}`,'👤');}
+  closeModal('m-student');renderStudents();updateNav();toast(S.editStu?'Updated':'Added','ok');
+}
+
+function delStudent(id){
+  if(!confirm('Delete?'))return;
+  const s=S.students.find(x=>x.id===id);S.students=S.students.filter(x=>x.id!==id);
+  log(`Deleted: ${s?.name}`,'🗑️');renderStudents();updateNav();toast('Deleted','inf');
+}
+
+function exportStudentsCSV(){
+  let c='ID,Name,Department,Year,Subjects,SpecialNeeds\n';
+  S.students.forEach(s=>{c+=`${s.id},"${s.name}","${s.dept}",${s.year},"${s.subjects.join(', ')}",${s.sn}\n`;});
+  dlCSV(c,'students_export.csv');toast('Students exported','ok');
+}
+
+// ══════════════════════════════════════════════════
+// PASTE FROM EXCEL
+// ══════════════════════════════════════════════════
+function showPastePanel(){document.getElementById('paste-panel').style.display='block';resetPaste();}
+function hidePastePanel(){document.getElementById('paste-panel').style.display='none';}
+
+function handlePaste(e){
+  e.preventDefault();
+  const text = e.clipboardData.getData('text');
+  if(!text.trim()){toast('Nothing pasted','err');return;}
+  // Parse TSV
+  const rows = text.trim().split('\n').map(r=>r.split('\t').map(c=>c.trim().replace(/^"|"$/g,'')));
+  if(rows.length===0){toast('Could not parse paste data','err');return;}
+  S.pasteRaw = rows;
+  S.pasteHeaders = rows[0];
+  // Move to step 2
+  document.getElementById('paste-step-1').style.display='none';
+  document.getElementById('paste-step-2').style.display='block';
+  document.getElementById('paste-cols-count').textContent = rows[0].length;
+  buildColMapper(rows[0], rows.slice(0,3));
+}
+
+function buildColMapper(headers, sampleRows) {
+  const fields = ['ID','Name','Department','Year','Subjects','SpecialNeeds','(ignore)'];
+  // Auto-guess mapping
+  const guesses = headers.map(h=>{
+    const hl = h.toLowerCase();
+    if(hl.includes('id')) return 'ID';
+    if(hl.includes('name')) return 'Name';
+    if(hl.includes('dept')||hl.includes('department')) return 'Department';
+    if(hl.includes('year')) return 'Year';
+    if(hl.includes('sub')) return 'Subjects';
+    if(hl.includes('special')||hl.includes('need')) return 'SpecialNeeds';
+    return '(ignore)';
+  });
+  document.getElementById('col-mapper').innerHTML = headers.map((h,i)=>`
+    <div class="cm-item">
+      <div class="cm-label">${h || 'Col '+(i+1)}</div>
+      <div style="font-size:10px;color:var(--t3);margin-bottom:6px">${sampleRows.map(r=>r[i]||'').slice(0,2).join(' · ')}</div>
+      <div class="cm-sel">
+        <select id="cm-${i}">
+          ${fields.map(f=>`<option value="${f}" ${guesses[i]===f?'selected':''}>${f}</option>`).join('')}
+        </select>
+      </div>
+    </div>`).join('');
+}
+
+function applyColMap(){
+  const n = S.pasteHeaders.length;
+  const map = {};
+  for(let i=0;i<n;i++){
+    const v=document.getElementById(`cm-${i}`)?.value;
+    if(v&&v!=='(ignore)') map[v]=i;
+  }
+  if(!map['Name']&&map['Name']!==0){toast('Map at least "Name" column','err');return;}
+  // Build rows (skip first row if it looks like headers)
+  const dataRows = S.pasteRaw.slice(S.pasteRaw[0].some(c=>isNaN(c)&&c.toLowerCase().includes('name'))?1:0);
+  buildEditableTable(dataRows, map);
+  document.getElementById('paste-step-2').style.display='none';
+  document.getElementById('paste-step-3').style.display='block';
+  validatePasteRows();
+}
+
+function buildEditableTable(rows, map){
+  const depts = [...new Set(S.students.map(s=>s.dept))];
+  const tbody = document.getElementById('paste-tbody');
+  tbody.innerHTML = rows.map((r,i)=>{
+    const id = map['ID']!==undefined ? r[map['ID']] : 'STU_'+String(S.students.length+i+1).padStart(3,'0');
+    const name = map['Name']!==undefined ? r[map['Name']] : '';
+    const dept = map['Department']!==undefined ? r[map['Department']] : '';
+    const year = map['Year']!==undefined ? r[map['Year']] : '1';
+    const subs = map['Subjects']!==undefined ? r[map['Subjects']] : '';
+    const sn = map['SpecialNeeds']!==undefined ? (r[map['SpecialNeeds']]||'').toLowerCase() : 'false';
+    return `<tr id="pr-${i}">
+      <td style="color:var(--t3);font-size:10px;font-family:var(--fm)">${i+1}</td>
+      <td><input value="${id}" onchange="validatePasteRows()" id="p-id-${i}"></td>
+      <td><input value="${name}" onchange="validatePasteRows()" id="p-name-${i}"></td>
+      <td><input value="${dept}" onchange="validatePasteRows()" id="p-dept-${i}" list="dept-list"></td>
+      <td><input value="${year}" onchange="validatePasteRows()" id="p-year-${i}" type="number" min="1" max="5" style="width:55px"></td>
+      <td><input value="${subs}" onchange="validatePasteRows()" id="p-subs-${i}"></td>
+      <td><select id="p-sn-${i}"><option value="false" ${sn!=='true'?'selected':''}>No</option><option value="true" ${sn==='true'?'selected':''}>Yes ♿</option></select></td>
+      <td><button class="btn bd xs" onclick="removePasteRow(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+  // Datalist for departments
+  if(!document.getElementById('dept-list')){
+    const dl=document.createElement('datalist');dl.id='dept-list';
+    depts.forEach(d=>{const o=document.createElement('option');o.value=d;dl.appendChild(o);});
+    document.body.appendChild(dl);
+  }
+}
+
+function addPasteRow(){
+  const tbody=document.getElementById('paste-tbody');
+  const i=tbody.rows.length;
+  const tr=document.createElement('tr');tr.id=`pr-${i}`;
+  tr.innerHTML=`<td style="color:var(--t3);font-size:10px;font-family:var(--fm)">${i+1}</td><td><input placeholder="STU_ID" id="p-id-${i}"></td><td><input placeholder="Full Name" id="p-name-${i}"></td><td><input placeholder="Dept" id="p-dept-${i}"></td><td><input type="number" value="1" min="1" max="5" style="width:55px" id="p-year-${i}"></td><td><input placeholder="Subject1, Subject2" id="p-subs-${i}"></td><td><select id="p-sn-${i}"><option value="false">No</option><option value="true">Yes ♿</option></select></td><td><button class="btn bd xs" onclick="this.closest('tr').remove();validatePasteRows()">✕</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function removePasteRow(i){
+  document.getElementById(`pr-${i}`)?.remove();
+  validatePasteRows();
+}
+
+function validatePasteRows(){
+  const rows=[...document.getElementById('paste-tbody').rows];
+  let ok=0,err=0;
+  rows.forEach(tr=>{
+    const idx=tr.id.replace('pr-','');
+    const name=(document.getElementById(`p-name-${idx}`)?.value||'').trim();
+    const dept=(document.getElementById(`p-dept-${idx}`)?.value||'').trim();
+    const valid=name&&dept;
+    tr.classList.toggle('row-ok',!!valid);
+    tr.classList.toggle('row-err',!valid);
+    valid?ok++:err++;
+  });
+  document.getElementById('paste-valid-count').textContent=ok;
+  document.getElementById('paste-err-count').textContent=err;
+}
+
+function confirmPaste(){
+  const rows=[...document.getElementById('paste-tbody').rows];
+  const imported=[];
+  rows.forEach(tr=>{
+    const idx=tr.id.replace('pr-','');
+    const name=(document.getElementById(`p-name-${idx}`)?.value||'').trim();
+    const dept=(document.getElementById(`p-dept-${idx}`)?.value||'').trim();
+    if(!name||!dept)return;
+    const id=(document.getElementById(`p-id-${idx}`)?.value||'STU_'+Date.now()).trim();
+    const year=parseInt(document.getElementById(`p-year-${idx}`)?.value)||1;
+    const subs=(document.getElementById(`p-subs-${idx}`)?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const sn=document.getElementById(`p-sn-${idx}`)?.value==='true';
+    imported.push({id,name,dept,year,subjects:subs.length?subs:[dept+' General'],sn,src:'Excel'});
+  });
+  if(!imported.length){toast('No valid rows to import','err');return;}
+  S.students.push(...imported);
+  log(`Pasted ${imported.length} students from Excel`,'📋');
+  updateNav();renderStudents();hidePastePanel();resetPaste();
+  toast(`Imported ${imported.length} students from Excel`,'ok');
+}
+
+function resetPaste(){
+  document.getElementById('paste-step-1').style.display='block';
+  document.getElementById('paste-step-2').style.display='none';
+  document.getElementById('paste-step-3').style.display='none';
+  document.getElementById('paste-ta').value='';
+  S.pasteRaw=[];S.pasteHeaders=[];
+}
+
+// ══════════════════════════════════════════════════
+// EXAMS
+// ══════════════════════════════════════════════════
+function renderExams(){
+  const q=(document.getElementById('ex-q')?.value||'').toLowerCase();
+  const f=S.exams.filter(e=>e.subject.toLowerCase().includes(q)||e.id.toLowerCase().includes(q));
+  document.getElementById('ex-tbody').innerHTML=f.length?f.map(e=>{
+    const elig=S.students.filter(s=>s.subjects.some(sub=>sub.toLowerCase()===e.subject.toLowerCase())).length;
+    return `<tr><td class="tid">${e.id}</td><td style="color:var(--t1);font-weight:500">${e.subject}</td><td>${e.date}</td><td><span class="badge bsk">${e.slot}</span></td><td><span class="badge bmu">${e.dur}m</span></td><td><span class="badge ${elig>0?'bgr':'br'}">${elig} students</span></td><td><span class="badge ${e.src==='CSV'?'bam':'bmu'}">${e.src||'Manual'}</span></td><td><button class="btn bs xs" onclick="openExamModal('${e.id}')">Edit</button> <button class="btn bd xs" onclick="delExam('${e.id}')">Del</button></td></tr>`;
+  }).join(''):`<tr class="er"><td colspan="8">No exams found.</td></tr>`;
+}
+
+function openExamModal(id=null){
+  S.editEx=id;document.getElementById('em-title').textContent=id?'Edit Exam':'Add Exam';
+  if(id){const e=S.exams.find(x=>x.id===id);document.getElementById('em-id').value=e.id;document.getElementById('em-sub').value=e.subject;document.getElementById('em-date').value=e.date;document.getElementById('em-slot').value=e.slot;document.getElementById('em-dur').value=e.dur;document.getElementById('em-req').value=(e.req||[]).join(', ');}
+  else{document.getElementById('em-id').value='EXAM_'+String(S.exams.length+1).padStart(3,'0');['em-sub','em-date','em-req'].forEach(x=>document.getElementById(x).value='');document.getElementById('em-dur').value='120';document.getElementById('em-slot').value='morning';}
+  showModal('m-exam');
+}
+
+function saveExam(){
+  const id=document.getElementById('em-id').value.trim();
+  const subject=document.getElementById('em-sub').value.trim();
+  const date=document.getElementById('em-date').value;
+  const slot=document.getElementById('em-slot').value;
+  const dur=parseInt(document.getElementById('em-dur').value);
+  const req=document.getElementById('em-req').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!subject||!date){toast('Fill required fields','err');return;}
+  if(S.editEx){const i=S.exams.findIndex(e=>e.id===S.editEx);if(i!==-1)S.exams[i]={...S.exams[i],subject,date,slot,dur,req};log(`Updated exam: ${subject}`,'✏️');}
+  else{S.exams.push({id:id||'EXAM_'+Date.now(),subject,date,slot,dur,req,src:'Manual'});log(`Added exam: ${subject}`,'📝');}
+  closeModal('m-exam');renderExams();updateNav();toast(S.editEx?'Updated':'Added','ok');
+}
+
+function delExam(id){
+  if(!confirm('Delete exam?'))return;
+  const e=S.exams.find(x=>x.id===id);S.exams=S.exams.filter(x=>x.id!==id);
+  log(`Deleted exam: ${e?.subject}`,'🗑️');renderExams();updateNav();toast('Deleted','inf');
+}
+
+function exportExamsCSV(){
+  let c='ID,Subject,Date,TimeSlot,Duration,Requirements\n';
+  S.exams.forEach(e=>{c+=`${e.id},"${e.subject}",${e.date},${e.slot},${e.dur},"${(e.req||[]).join(', ')}"\n`;});
+  dlCSV(c,'exams_export.csv');toast('Exams exported','ok');
+}
+
+// ══════════════════════════════════════════════════
+// HALL POOL
+// ══════════════════════════════════════════════════
+const HALL_COLORS_CLS = ['hcol0','hcol1','hcol2','hcol3','hcol4','hcol5','hcol6'];
+
+function renderHallPool(){
+  const list=document.getElementById('hpool-list');
+  document.getElementById('hpool-badge').textContent=S.halls.length;
+  if(!S.halls.length){list.innerHTML=`<div style="color:var(--t3);font-size:12px;text-align:center;padding:24px 0">No halls yet.</div>`;renderPoolCap();return;}
+  list.innerHTML=S.halls.map((h,i)=>{
+    const blocked=h.blocked?h.blocked.size:0;const effCap=h.cap-blocked;const color=HCOLS[i%HCOLS.length];
+    return `<div class="hc ${h.active?'hc-on':'hc-off'}" id="hcard-${h.id}">
+      <span class="hc-drag" title="Drag to reorder">⠿</span>
+      <div class="hc-num" style="background:${color}22;border:1px solid ${color}55;color:${color}">${i+1}</div>
+      <div class="hc-body">
+        <div class="hc-name">${h.name}</div>
+        <div class="hc-meta">${h.block} · ${h.floor} · ${h.type}${blocked?' · <span style="color:var(--rose)">'+blocked+' blocked</span>':''}</div>
+        <div class="pbar" style="width:120px;margin-top:5px"><div class="pbf" style="width:${Math.round(effCap/h.cap*100)}%;background:${color}"></div></div>
+      </div>
+      <div class="hc-right">
+        <div class="hc-cap" style="color:${color}">${effCap}<span style="font-size:11px;opacity:.5">/${h.cap}</span></div>
+        <div class="toggle-wrap" onclick="toggleHall('${h.id}')">
+          <div class="toggle ${h.active?'on':''}" id="tgl-${h.id}"></div>
+          <span class="toggle-label" id="tlbl-${h.id}">${h.active?'Active':'Inactive'}</span>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:4px">
+          <button class="btn bs xs" onclick="openHallModal('${h.id}')">Edit</button>
+          <button class="btn bo xs" onclick="go('hall-editor');selectEditorHall('${h.id}')">Seats</button>
+          <button class="btn bd xs" onclick="delHall('${h.id}')">Del</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  renderPoolCap();
+}
+
+function toggleHall(id){
+  const h=S.halls.find(x=>x.id===id);if(!h)return;
+  h.active=!h.active;
+  document.getElementById(`tgl-${id}`).classList.toggle('on',h.active);
+  document.getElementById(`tlbl-${id}`).textContent=h.active?'Active':'Inactive';
+  document.getElementById(`hcard-${id}`).classList.toggle('hc-on',h.active);
+  document.getElementById(`hcard-${id}`).classList.toggle('hc-off',!h.active);
+  log(`${h.name} ${h.active?'activated':'deactivated'}`,'🔄');
+  updateNav();renderDashboard();
+}
+
+function sortHallsByCapacity(){
+  S.halls.sort((a,b)=>b.cap-a.cap);
+  S.halls.forEach((h,i)=>h.priority=i);
+  renderHallPool();toast('Sorted largest first','ok');
+}
+
+function renderPoolCap(){
+  const el=document.getElementById('pool-cap');
+  if(!S.halls.length){el.innerHTML=`<div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">Add halls first</div>`;return;}
+  const active=S.halls.filter(h=>h.active);
+  const total=active.reduce((s,h)=>s+h.cap-(h.blocked?h.blocked.size:0),0);
+  el.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:12px;align-items:center">
+    <span style="font-size:12px;color:var(--t2)">Active effective capacity</span>
+    <span style="font-size:24px;font-weight:800;font-family:var(--fm);color:var(--teal)">${total}</span>
+  </div>`+
+  active.map((h,i)=>{
+    const eff=h.cap-(h.blocked?h.blocked.size:0);const pct=Math.round(eff/total*100||0);const color=HCOLS[i%HCOLS.length];
+    return `<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:3px"><span>${h.name}</span><strong style="font-family:var(--fm);color:${color}">${eff}</strong></div>
+    <div class="pbar"><div class="pbf" style="width:${pct}%;background:${color}"></div></div></div>`;
+  }).join('')+`<div style="margin-top:12px;padding:9px;background:rgba(0,0,0,.2);border-radius:7px;font-size:10px;color:var(--t3)">${active.length} active · ${S.halls.filter(h=>!h.active).length} inactive</div>`;
+}
+
+function openHallModal(id=null){
+  S.editHall=id;document.getElementById('hm-title').textContent=id?'Edit Hall':'Add Exam Hall';
+  if(id){const h=S.halls.find(x=>x.id===id);document.getElementById('hm-id').value=h.id;document.getElementById('hm-name').value=h.name;document.getElementById('hm-block').value=h.block;document.getElementById('hm-floor').value=h.floor;document.getElementById('hm-type').value=h.type;if(h.type==='custom'){document.getElementById('hm-custom').style.display='block';document.getElementById('hm-rows').value=h.rows;document.getElementById('hm-cols').value=h.cols;}else{document.getElementById('hm-custom').style.display='none';}}
+  else{document.getElementById('hm-id').value='HALL_'+String(S.halls.length+1).padStart(3,'0');['hm-name','hm-block','hm-floor'].forEach(x=>document.getElementById(x).value='');document.getElementById('hm-type').value='standard';document.getElementById('hm-custom').style.display='none';}
+  hm_capPreview();showModal('m-hall');
+}
+
+function hm_typeChange(){
+  const t=document.getElementById('hm-type').value;
+  document.getElementById('hm-custom').style.display=t==='custom'?'block':'none';
+  hm_capPreview();
+}
+
+function hm_capPreview(){
+  const t=document.getElementById('hm-type').value;
+  let cap,cols,rows;
+  if(t==='custom'){cols=parseInt(document.getElementById('hm-cols').value)||7;rows=parseInt(document.getElementById('hm-rows').value)||7;cap=cols*rows;}
+  else{const c=RCFG[t];cols=c.cols;rows=c.rows;cap=c.cap;}
+  document.getElementById('hm-prev').innerHTML=`This hall will have <strong>${cap} seats</strong> (${cols} cols × ${rows} rows)`;
+}
+
+function saveHall(){
+  const id=document.getElementById('hm-id').value.trim();
+  const name=document.getElementById('hm-name').value.trim();
+  const block=document.getElementById('hm-block').value.trim()||'—';
+  const floor=document.getElementById('hm-floor').value.trim()||'—';
+  const type=document.getElementById('hm-type').value;
+  if(!name){toast('Hall name required','err');return;}
+  let cols,rows,cap;
+  if(type==='custom'){cols=parseInt(document.getElementById('hm-cols').value)||7;rows=parseInt(document.getElementById('hm-rows').value)||7;cap=cols*rows;}
+  else{const c=RCFG[type];cols=c.cols;rows=c.rows;cap=c.cap;}
+  if(S.editHall){const i=S.halls.findIndex(h=>h.id===S.editHall);if(i!==-1){const old=S.halls[i];S.halls[i]={...old,name,block,floor,type,cols,rows,cap};if(old.cap!==cap)S.halls[i].blocked=new Set();}log(`Updated hall: ${name}`,'✏️');}
+  else{S.halls.push({id:id||'HALL_'+Date.now(),name,block,floor,type,cols,rows,cap,active:true,blocked:new Set(),priority:S.halls.length});log(`Added hall: ${name}`,'🏛');}
+  closeModal('m-hall');renderHallPool();updateNav();renderDashboard();toast(S.editHall?'Hall updated':'Hall added','ok');
+}
+
+function delHall(id){
+  if(!confirm('Delete this hall?'))return;
+  const h=S.halls.find(x=>x.id===id);S.halls=S.halls.filter(x=>x.id!==id);
+  log(`Deleted hall: ${h?.name}`,'🗑️');renderHallPool();updateNav();renderDashboard();toast('Hall deleted','inf');
+}
+
+function exportHallsCSV(){
+  let c='ID,Name,Block,Floor,RoomType,Rows,Cols,Capacity,Active\n';
+  S.halls.forEach(h=>{c+=`${h.id},"${h.name}","${h.block}","${h.floor}",${h.type},${h.rows},${h.cols},${h.cap},${h.active}\n`;});
+  dlCSV(c,'halls_export.csv');toast('Halls exported','ok');
+}
+
+// ══════════════════════════════════════════════════
+// HALL EDITOR — BLOCKED SEATS
+// ══════════════════════════════════════════════════
+function loadHallEditorList(){
+  const sel=document.getElementById('he-hall-sel');
+  sel.innerHTML='<option value="">Select a hall...</option>';
+  S.halls.forEach(h=>{sel.innerHTML+=`<option value="${h.id}">${h.name} (${h.cap} seats)</option>`;});
+}
+
+function selectEditorHall(id){
+  document.getElementById('he-hall-sel').value=id;
+  loadHallEditor();
+}
+
+function loadHallEditor(){
+  const id=document.getElementById('he-hall-sel').value;
+  if(!id){document.getElementById('he-empty').style.display='block';document.getElementById('he-content').style.display='none';return;}
+  const h=S.halls.find(x=>x.id===id);
+  if(!h)return;
+  S.currentEditorHall=id;
+  // Copy blocked set for editing
+  if(!S.blockedEdits[id]) S.blockedEdits[id]=new Set(h.blocked||[]);
+  document.getElementById('he-empty').style.display='none';
+  document.getElementById('he-content').style.display='block';
+  document.getElementById('he-hall-name').textContent=h.name;
+  renderEditorGrid();
+  renderRangeChips();
+  renderHeStats();
+}
+
+function renderEditorGrid(){
+  const id=S.currentEditorHall;const h=S.halls.find(x=>x.id===id);if(!h)return;
+  const bs=S.blockedEdits[id]||new Set();
+  const grid=document.getElementById('he-grid');
+  const cellSize=Math.min(38,Math.floor((grid.offsetWidth||500)/h.cols)-4);
+  grid.style.gridTemplateColumns=`repeat(${h.cols},${cellSize}px)`;
+  let html='';
+  for(let r=0;r<h.rows;r++){
+    for(let c=0;c<h.cols;c++){
+      const key=`${r},${c}`;
+      const label=String.fromCharCode(65+r)+String(c+1).padStart(2,'0');
+      const blocked=bs.has(key);
+      html+=`<div class="bseat ${blocked?'blocked':'open'}" data-key="${key}" data-label="${label}" onclick="toggleSeat('${key}')" title="${label}"></div>`;
+    }
+  }
+  grid.innerHTML=html;
+  document.getElementById('he-blocked-count').textContent=bs.size+' blocked';
+  renderHeStats();
+}
+
+function toggleSeat(key){
+  const id=S.currentEditorHall;if(!id)return;
+  if(!S.blockedEdits[id])S.blockedEdits[id]=new Set();
+  const bs=S.blockedEdits[id];
+  bs.has(key)?bs.delete(key):bs.add(key);
+  const el=document.querySelector(`[data-key="${key}"]`);
+  if(el){el.className=`bseat ${bs.has(key)?'blocked':'open'}`;}
+  document.getElementById('he-blocked-count').textContent=bs.size+' blocked';
+  renderHeStats();
+}
+
+function blockRange(){applyRange(true);}
+function unblockRange(){applyRange(false);}
+
+function applyRange(block){
+  const id=S.currentEditorHall;if(!id)return;
+  const h=S.halls.find(x=>x.id===id);if(!h)return;
+  const r1=parseInt(document.getElementById('rng-r1').value)||1;
+  const r2=parseInt(document.getElementById('rng-r2').value)||r1;
+  const c1=parseInt(document.getElementById('rng-c1').value)||1;
+  const c2=parseInt(document.getElementById('rng-c2').value)||c1;
+  if(!S.blockedEdits[id])S.blockedEdits[id]=new Set();
+  const bs=S.blockedEdits[id];
+  for(let r=Math.min(r1,r2)-1;r<=Math.max(r1,r2)-1;r++){
+    for(let c=Math.min(c1,c2)-1;c<=Math.max(c1,c2)-1;c++){
+      if(r>=0&&r<h.rows&&c>=0&&c<h.cols){
+        const key=`${r},${c}`;block?bs.add(key):bs.delete(key);
+      }
+    }
+  }
+  renderEditorGrid();renderRangeChips();
+}
+
+function renderRangeChips(){
+  const id=S.currentEditorHall;if(!id)return;
+  const bs=S.blockedEdits[id]||new Set();
+  const el=document.getElementById('rng-chips');
+  if(!bs.size){el.innerHTML=`<span style="font-size:11px;color:var(--t3)">No seats blocked</span>`;return;}
+  el.innerHTML=`<span style="font-size:11px;color:var(--t2)">${bs.size} seats blocked total</span>`;
+}
+
+function clearAllBlocked(){
+  const id=S.currentEditorHall;if(!id)return;
+  if(!confirm('Clear all blocked seats?'))return;
+  S.blockedEdits[id]=new Set();
+  renderEditorGrid();renderRangeChips();toast('All seats cleared','ok');
+}
+
+function saveBlocked(){
+  const id=S.currentEditorHall;if(!id)return;
+  const h=S.halls.find(x=>x.id===id);if(!h)return;
+  h.blocked=new Set(S.blockedEdits[id]||[]);
+  log(`Saved blocked seats for ${h.name} (${h.blocked.size} blocked)`,'🚫');
+  renderHallPool();renderDashboard();updateNav();
+  toast(`Saved — ${h.blocked.size} seats blocked`,'ok');
+}
+
+function renderHeStats(){
+  const id=S.currentEditorHall;if(!id)return;
+  const h=S.halls.find(x=>x.id===id);if(!h)return;
+  const bs=S.blockedEdits[id]||new Set();
+  const eff=h.cap-bs.size;
+  document.getElementById('he-stats').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--t2)">Total seats:</span><strong style="font-family:var(--fm)">${h.cap}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--rose)">Blocked:</span><strong style="font-family:var(--fm);color:var(--rose)">${bs.size}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--green)">Available:</span><strong style="font-family:var(--fm);color:var(--green)">${eff}</strong></div>
+      <div class="div" style="margin:4px 0"></div>
+      <div style="font-size:10px;color:var(--t3)">Dimensions: ${h.cols} cols × ${h.rows} rows</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════
+// AUTO ALLOCATION — LARGEST FIRST
+// ══════════════════════════════════════════════════
+function populateAllocDropdown(){
+  const sel=document.getElementById('al-exam');
+  sel.innerHTML='<option value="">Choose an exam...</option>';
+  S.exams.forEach(e=>{sel.innerHTML+=`<option value="${e.id}">${e.subject} — ${e.date} (${e.slot})</option>`;});
+}
+
+function autoSelectHalls(eligible, minDist) {
+  // Active halls sorted by capacity DESCENDING (largest first)
+  const active = [...S.halls]
+    .filter(h=>h.active)
+    .sort((a,b)=>{
+      const ea = a.cap-(a.blocked?a.blocked.size:0);
+      const eb = b.cap-(b.blocked?b.blocked.size:0);
+      return eb-ea;
+    });
+  if(!active.length) return [];
+  const n=eligible.length;
+  // Estimate effective capacity per hall with this distance
+  const selected=[];let totalEff=0;
+  for(const h of active){
+    if(totalEff>=n)break;
+    const eff=estimateEffCap(h,minDist);
+    selected.push({hall:h,est:eff});
+    totalEff+=eff;
+  }
+  // If still not enough, add remaining halls
+  if(totalEff<n){
+    for(const h of active){
+      if(selected.find(x=>x.hall.id===h.id))continue;
+      const eff=estimateEffCap(h,minDist);
+      selected.push({hall:h,est:eff});
+      totalEff+=eff;
+    }
+  }
+  return selected;
+}
+
+function estimateEffCap(hall,dist){
+  // Use identical skip-pattern logic so preview matches actual allocation
+  const bs=hall.blocked||new Set();
+  const seats=buildValidSeats(hall.rows,hall.cols,dist,bs);
+  return Math.max(1,seats.length);
+}
+
+function updateAllocPreview(){
+  const examId=document.getElementById('al-exam')?.value;
+  const dist=parseInt(document.getElementById('al-dist')?.value||2);
+  const sb=document.getElementById('al-status-box');
+  const pv=document.getElementById('al-preview');
+  const rb=document.getElementById('al-run-btn');
+  document.getElementById('al-dv').textContent=dist;
+
+  if(!examId){sb.className='stbox stinf';sb.textContent='Select an exam to preview auto-selection';pv.innerHTML=`<div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">Select an exam to see which halls will be used</div>`;rb.disabled=true;updateInterleavePreview('');return;}
+
+  const exam=S.exams.find(e=>e.id===examId);
+  const eligible=S.students.filter(s=>s.subjects.some(sub=>sub.toLowerCase()===exam.subject.toLowerCase()));
+  if(!eligible.length){sb.className='stbox stwrn';sb.textContent=`⚠️ No students registered for "${exam.subject}"`;pv.innerHTML='';rb.disabled=true;return;}
+
+  const active=S.halls.filter(h=>h.active);
+  if(!active.length){sb.className='stbox sterr';sb.innerHTML=`❌ No active halls. <button class="btn bo xs" onclick="go('hall-pool')">Manage Halls</button>`;rb.disabled=true;return;}
+
+  const selected=autoSelectHalls(eligible,dist);
+  const totalEff=selected.reduce((s,x)=>s+x.est,0);
+
+  // Build preview
+  let html=`<div class="aps"><div class="aps-head"><span>🤖 Auto-selected ${selected.length} hall${selected.length!==1?'s':''} for ${eligible.length} students</span><span style="font-family:var(--fm);font-size:11px">~${totalEff} eff. seats</span></div>`;
+  selected.forEach((x,i)=>{
+    const color=HCOLS[i%HCOLS.length];const blocked=x.hall.blocked?x.hall.blocked.size:0;
+    html+=`<div class="aps-row">
+      <div class="aps-badge" style="background:${color}22;border:1px solid ${color}55;color:${color}">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--t1);font-weight:500">${x.hall.name}</div>
+        <div style="font-size:10px;color:var(--t3)">${x.hall.type} · ${x.hall.cap} seats${blocked?' · '+blocked+' blocked':''}</div>
+        <div class="cap-bar" style="margin-top:4px"><div class="cap-bar-fill" style="width:${Math.min(100,Math.round(x.est/x.hall.cap*100))}%;background:${color}"></div></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:14px;font-weight:800;font-family:var(--fm);color:${color}">~${x.est}</div>
+        <div style="font-size:9px;color:var(--t3)">eff. seats</div>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  pv.innerHTML=html;
+
+  if(totalEff>=eligible.length){
+    sb.className='stbox stok';sb.innerHTML=`✅ <strong>${eligible.length} students</strong> · ~<strong>${totalEff}</strong> effective seats across <strong>${selected.length}</strong> hall${selected.length!==1?'s':''}. All students will be placed.`;
+    rb.disabled=false;
+  } else {
+    const short=eligible.length-totalEff;
+    sb.className='stbox stwrn';sb.innerHTML=`⚠️ Estimated capacity (~${totalEff}) may not cover all ${eligible.length} students. ~${short} may be unplaced. <button class="btn bo xs" onclick="go('hall-pool')" style="margin-left:8px">Add Halls</button>`;
+    rb.disabled=false;
+  }
+  updateInterleavePreview(examId,eligible);
+}
+
+function updateInterleavePreview(examId,eligible){
+  const el=document.getElementById('al-interleave');
+  if(!examId||!eligible||!eligible.length){el.innerHTML=`<div style="color:var(--t3);font-size:12px;text-align:center;padding:14px 0">Select an exam to preview</div>`;return;}
+  const ordered=interleave(eligible,true);
+  const subjects=[...new Set(eligible.flatMap(s=>s.subjects))];
+  const cmap={};subjects.forEach((s,i)=>cmap[s]=SCOLS[i%SCOLS.length]);
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">`+
+    ordered.map(s=>{const c=cmap[s.subjects[0]]||'#888';return `<div style="width:18px;height:18px;border-radius:3px;background:${c}22;border:1px solid ${c}55;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:${c}" title="${s.name}">${s.name.split(' ').map(n=>n[0]).join('')}</div>`;}).join('')+
+    `</div><div style="display:flex;flex-wrap:wrap;gap:8px">`+
+    subjects.map((s,i)=>`<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3)"><div style="width:8px;height:8px;border-radius:2px;background:${SCOLS[i%SCOLS.length]}"></div>${s}</div>`).join('')+
+    `</div><div style="margin-top:6px;font-size:10px;color:var(--t3)">Same-color students are spread apart to prevent cheating</div>`;
+}
+
+// ══════════════════════════════════════════════════
+// INTERLEAVE ALGORITHM
+// ══════════════════════════════════════════════════
+function interleave(students,prioritizeSN){
+  const groups={};
+  students.forEach(s=>{const k=s.subjects[0]||'Other';if(!groups[k])groups[k]=[];groups[k].push(s);});
+  if(prioritizeSN)Object.values(groups).forEach(g=>g.sort((a,b)=>b.sn-a.sn));
+  const result=[];const keys=Object.keys(groups);let i=0,more=true;
+  while(more){more=false;keys.forEach(k=>{if(groups[k][i]!==undefined){result.push(groups[k][i]);more=true;}});i++;}
+  return result;
+}
+
+// ══════════════════════════════════════════════════
+// CORE ALLOCATION — SKIP-PATTERN (practical, correct)
+// dist=1 → every seat  (~100%)
+// dist=2 → 1 gap between students in same row, adjacent rows staggered (~50%)
+// dist=3 → 2 gaps between, rows spaced (~28%)
+// dist=4 → pandemic: 3 gaps, 2-row spacing (~15%)
+// dist=5 → maximum: 4 gaps, 3-row spacing (~8%)
+// ══════════════════════════════════════════════════
+function buildValidSeats(rows, cols, minDist, bs){
+  // Column step = minDist (N-1 empty seats between each student in same row)
+  // Row step = ceil(minDist/2) so vertical gap scales with distance
+  const colStep = minDist;
+  const rowStep = Math.max(1, Math.ceil(minDist / 2));
+  const seats = [];
+  for(let r = 0; r < rows; r += rowStep){
+    // Stagger odd row groups so no student is directly behind another
+    const colOffset = (Math.floor(r / rowStep) % 2 === 1) ? Math.floor(colStep / 2) : 0;
+    for(let c = colOffset; c < cols; c += colStep){
+      if(!bs.has(`${r},${c}`)) seats.push({r, c});
+    }
+  }
+  return seats;
+}
+
+function allocateHall(students, hall, minDist){
+  const {cols, rows, blocked} = hall;
+  const bs = blocked || new Set();
+  const grid = Array(rows).fill(null).map(() => Array(cols).fill(null));
+  const validSeats = buildValidSeats(rows, cols, minDist, bs);
+  const seated = [];
+  let si = 0; // seat index
+  // Special needs students go to first row if possible
+  const snStudents = students.filter(s => s.sn);
+  const normalStudents = students.filter(s => !s.sn);
+  const ordered = [...snStudents, ...normalStudents];
+  for(const student of ordered){
+    if(si >= validSeats.length) break;
+    const {r, c} = validSeats[si++];
+    grid[r][c] = student;
+    const seatLabel = String.fromCharCode(65 + r) + String(c + 1).padStart(2, '0');
+    seated.push({student, row:r, col:c, seatNum:r*cols+c+1, seatLabel, hallId:hall.id});
+  }
+  const remaining = ordered.slice(seated.length);
+  const avgD = avgDist(seated);
+  const effCap = validSeats.length;
+  return {grid, seated, remaining, cols, rows, blocked:bs,
+    metrics:{seated:seated.length, total:students.length, avgDist:avgD.toFixed(2),
+      efficiency:(seated.length/Math.max(1,effCap)*100).toFixed(1), effCap}};
+}
+
+function avgDist(a){
+  if(a.length<2)return 0;let s=0,n=0;
+  for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){s+=Math.sqrt(Math.pow(a[i].row-a[j].row,2)+Math.pow(a[i].col-a[j].col,2));n++;}
+  return n?s/n:0;
+}
+
+// ══════════════════════════════════════════════════
+// RUN ALLOCATION
+// ══════════════════════════════════════════════════
+function runAllocation(){
+  const examId=document.getElementById('al-exam').value;
+  if(!examId){toast('Select an exam','err');return;}
+  const exam=S.exams.find(e=>e.id===examId);
+  const minDist=parseInt(document.getElementById('al-dist').value);
+  const prioritizeSN=document.getElementById('al-sn').checked;
+  const doInterleave=document.getElementById('al-int').checked;
+  const autoSelect=document.getElementById('al-auto').checked;
+
+  let eligible=S.students.filter(s=>s.subjects.some(sub=>sub.toLowerCase()===exam.subject.toLowerCase()));
+  if(!eligible.length){toast(`No students for "${exam.subject}"`, 'err');return;}
+
+  // Sort/interleave
+  let ordered=doInterleave?interleave(eligible,prioritizeSN):[...eligible].sort((a,b)=>{if(prioritizeSN&&a.sn!==b.sn)return b.sn?1:-1;return a.dept.localeCompare(b.dept);});
+
+  // Auto-select halls (largest first) or use all active
+  let hallPool;
+  if(autoSelect){
+    const sel=autoSelectHalls(eligible,minDist);
+    hallPool=sel.map(x=>x.hall);
+  } else {
+    hallPool=[...S.halls].filter(h=>h.active).sort((a,b)=>{const ea=a.cap-(a.blocked?a.blocked.size:0),eb=b.cap-(b.blocked?b.blocked.size:0);return eb-ea;});
+  }
+
+  if(!hallPool.length){toast('No active halls available','err');go('hall-pool');return;}
+
+  // Allocate sequentially across halls
+  const hallResults=[];let remaining=[...ordered];
+  for(const hall of hallPool){
+    if(!remaining.length)break;
+    const result=allocateHall(remaining,hall,minDist);
+    result.seated.forEach(a=>a.hallId=hall.id);
+    hallResults.push({hall,result});
+    remaining=result.remaining;
+  }
+
+  const totalSeated=hallResults.reduce((s,hr)=>s+hr.result.seated.length,0);
+  S.lastResult={exam,hallResults,totalSeated,unallocated:remaining,minDist,eligible,timestamp:new Date()};
+  S.allocCount++;
+  updateNav();
+  log(`Allocated ${totalSeated}/${eligible.length} for ${exam.subject} across ${hallResults.filter(hr=>hr.result.seated.length).length} halls`,'🚀');
+
+  toast(remaining.length?`⚠️ ${remaining.length} students unplaced — add more halls`:`✅ All ${totalSeated} students placed`,remaining.length?'wrn':'ok');
+  go('results');
+}
+
+// ══════════════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════════════
+function renderResults(){
+  if(!S.lastResult){return;}
+  const {exam,hallResults,totalSeated,unallocated,eligible,minDist,timestamp}=S.lastResult;
+  document.getElementById('res-sub').textContent=`${exam.subject} · ${exam.date} · ${exam.slot} · ${timestamp.toLocaleTimeString()}`;
+  document.getElementById('res-empty').style.display='none';
+  document.getElementById('res-content').style.display='block';
+  document.getElementById('res-actions').style.display='flex';
+  const hallsUsed=hallResults.filter(hr=>hr.result.seated.length).length;
+  const avgEff=hallResults.filter(hr=>hr.result.seated.length).reduce((s,hr)=>s+parseFloat(hr.result.metrics.efficiency),0)/Math.max(1,hallsUsed);
+  document.getElementById('res-metrics').innerHTML=`
+    <div class="mc c1"><div class="ml">Total Seated</div><div class="mv">${totalSeated}</div><div class="ms">of ${eligible.length}</div></div>
+    <div class="mc c2"><div class="ml">Halls Used</div><div class="mv">${hallsUsed}</div><div class="ms">exam halls</div></div>
+    <div class="mc c3"><div class="ml">Min Distance</div><div class="mv">${minDist}</div><div class="ms">seat spacing</div></div>
+    <div class="mc c${unallocated.length?4:5}"><div class="ml">Unplaced</div><div class="mv">${unallocated.length}</div><div class="ms">${unallocated.length?'need more halls':'all placed ✓'}</div></div>
+    <div class="mc c5"><div class="ml">Avg Efficiency</div><div class="mv">${avgEff.toFixed(0)}%</div><div class="ms">room utilization</div></div>
+  `;
+
+  // Master table
+  const allRows=hallResults.flatMap((hr,hi)=>hr.result.seated.map(a=>({...a,hi,hallName:hr.hall.name})));
+  allRows.sort((a,b)=>a.hi-b.hi||a.row-b.row||a.col-b.col);
+  document.getElementById('master-tbody').innerHTML=allRows.map(a=>{
+    const color=HCOLS[a.hi%HCOLS.length];
+    return `<tr><td><span class="badge" style="background:${color}1a;color:${color};border:1px solid ${color}33">${a.hallName}</span></td>
+    <td class="tid" style="color:${color}">${a.seatLabel}</td>
+    <td class="tid">${a.student.id}</td>
+    <td style="color:var(--t1);font-weight:500">${a.student.name}</td>
+    <td>${a.student.dept}</td>
+    <td><span class="badge bsk">Y${a.student.year}</span></td>
+    <td><span class="tag">${a.student.subjects[0]||'—'}</span></td>
+    <td>${a.student.sn?'<span class="badge bgr">♿</span>':'—'}</td></tr>`;
+  }).join('');
+
+  // Per-hall tabs
+  const tabs=document.getElementById('res-tabs'),panels=document.getElementById('res-panels');
+  tabs.innerHTML='';panels.innerHTML='';
+  hallResults.forEach((hr,i)=>{
+    if(!hr.result.seated.length)return;
+    const color=HCOLS[i%HCOLS.length];
+    const tab=document.createElement('button');
+    tab.className='htab'+(i===0?' on':'');
+    tab.textContent=`${hr.hall.name} (${hr.result.seated.length})`;
+    tab.onclick=()=>{document.querySelectorAll('.htab').forEach(t=>t.classList.remove('on'));tab.classList.add('on');document.querySelectorAll('.hp').forEach(p=>p.classList.remove('on'));document.getElementById(`hp${i}`).classList.add('on');};
+    tabs.appendChild(tab);
+    const panel=document.createElement('div');
+    panel.className='hp'+(i===0?' on':'');panel.id=`hp${i}`;
+    const cfg={cols:hr.hall.cols,rows:hr.hall.rows};
+    const eff=parseFloat(hr.result.metrics.efficiency);
+    panel.innerHTML=`
+      <div class="g3" style="margin-bottom:14px">
+        <div style="padding:10px;background:${color}1a;border-radius:8px;border:1px solid ${color}33;text-align:center"><div style="font-size:9px;color:var(--t3)">SEATED</div><div style="font-size:22px;font-weight:800;font-family:var(--fm);color:${color}">${hr.result.seated.length}</div></div>
+        <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--bdr);text-align:center"><div style="font-size:9px;color:var(--t3)">AVG DIST</div><div style="font-size:22px;font-weight:800;font-family:var(--fm);color:var(--t1)">${hr.result.metrics.avgDist}</div></div>
+        <div style="padding:10px;background:${eff>80?'var(--amberf)':'var(--greenf)'};border-radius:8px;border:1px solid ${eff>80?'rgba(255,170,64,.2)':'rgba(34,211,166,.2)'};text-align:center"><div style="font-size:9px;color:var(--t3)">EFFICIENCY</div><div style="font-size:22px;font-weight:800;font-family:var(--fm);color:${eff>80?'var(--amber)':'var(--green)'}">${eff}%</div></div>
+      </div>
+      <div style="margin-bottom:8px;padding:6px 10px;background:rgba(0,0,0,.25);border-radius:6px;font-size:10px;color:var(--t3)">📋 Front of Room · ${hr.hall.block} · ${hr.hall.floor} · ${cfg.cols}×${cfg.rows}</div>
+      <div id="rg-${i}" class="rsg" style="grid-template-columns:repeat(${cfg.cols},1fr);gap:3px"></div>
+      <div class="sleg">
+        <div class="sli"><div class="sld" style="background:rgba(56,190,255,.2);border:1px solid rgba(56,190,255,.4)"></div>Standard</div>
+        <div class="sli"><div class="sld" style="background:rgba(255,170,64,.2);border:1px solid rgba(255,170,64,.4)"></div>Front Row</div>
+        <div class="sli"><div class="sld" style="background:rgba(34,211,166,.2);border:1px solid rgba(34,211,166,.4)"></div>Accessible</div>
+        <div class="sli"><div class="sld" style="background:rgba(255,92,122,.1);border:1px solid rgba(255,92,122,.25)"></div>Blocked</div>
+        <div class="sli"><div class="sld" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)"></div>Empty</div>
+      </div>
+      <div style="margin-top:10px"><button class="btn bs xs" onclick="exportSingleHall(${i})">Export This Hall CSV</button></div>
+    `;
+    panels.appendChild(panel);
+    setTimeout(()=>renderResultGrid(`rg-${i}`,hr.result,color),i*15);
+  });
+
+  // Unallocated
+  const uc=document.getElementById('unalloc-card'),ub=document.getElementById('unalloc-body');
+  if(unallocated.length){
+    uc.style.display='block';
+    ub.innerHTML=`<div class="stbox sterr gap">❌ ${unallocated.length} student(s) could not be seated. Add more halls or increase their capacity.<button class="btn bo xs" onclick="go('hall-pool')" style="margin-left:8px">Add Hall</button></div>
+    <div class="tw"><table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Subjects</th></tr></thead><tbody>
+    ${unallocated.map(s=>`<tr><td class="tid">${s.id}</td><td style="color:var(--rose)">${s.name}</td><td>${s.dept}</td><td>${s.subjects.map(x=>`<span class="tag">${x}</span>`).join('')}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  } else uc.style.display='none';
+  renderExports();
+}
+
+function renderResultGrid(containerId,result,hallColor){
+  const el=document.getElementById(containerId);if(!el)return;
+  const {grid,cols,rows,blocked}=result;
+  const bs=blocked||new Set();let html='';
+  for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+    const student=grid[r][c];const lbl=String.fromCharCode(65+r)+String(c+1).padStart(2,'0');
+    const delay=(r*cols+c)*0.006;
+    if(bs.has(`${r},${c}`)){html+=`<div class="rs rs-b" style="animation-delay:${delay}s"><span class="rs-bx">✕</span><div class="rs-tip">${lbl} — Blocked</div></div>`;}
+    else if(student){const init=student.name.split(' ').map(n=>n[0]).join('');const cls=student.sn?'rs-a':r===0?'rs-f':'rs-s';html+=`<div class="rs ${cls}" style="animation-delay:${delay}s"><div class="rs-num">${lbl}</div><div class="rs-init">${init}</div><div class="rs-tip">${student.name}${student.sn?' ♿':''}<br><span style="font-size:9px;opacity:.7">${student.subjects[0]||''}</span></div></div>`;}
+    else{html+=`<div class="rs rs-e" style="animation-delay:${delay}s"><div class="rs-num">${lbl}</div></div>`;}
+  }}
+  el.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════
+// EXPORTS
+// ══════════════════════════════════════════════════
+function renderExports(){
+  const el=document.getElementById('exp-alloc');
+  if(!S.lastResult){el.innerHTML=`<div style="color:var(--t3);font-size:12px;text-align:center;padding:20px 0">Run an allocation first</div>`;return;}
+  const {exam,hallResults}=S.lastResult;
+  el.innerHTML=`<div style="margin-bottom:12px;font-size:12px;color:var(--t2)">Last allocation: <strong style="color:var(--t1)">${exam.subject}</strong> · ${exam.date}</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button class="btn bp fw" onclick="exportMasterCSV()">📥 Master Assignment CSV</button>
+    <button class="btn bs fw" onclick="exportAllHalls()">📦 All Halls (ZIP-style)</button>
+    ${hallResults.map((hr,i)=>hr.result.seated.length?`<button class="btn bs fw" onclick="exportSingleHall(${i})">🏛 ${hr.hall.name}</button>`:'').join('')}
+  </div>`;
+}
+
+function exportMasterCSV(){
+  if(!S.lastResult){toast('Run allocation first','err');return;}
+  const {exam,hallResults,unallocated}=S.lastResult;
+  let c=`Exam: ${exam.subject},Date: ${exam.date},Time: ${exam.slot}\n\nHall,Seat,Student ID,Name,Department,Year,Primary Subject,Special Needs\n`;
+  hallResults.forEach(hr=>hr.result.seated.forEach(a=>{c+=`"${hr.hall.name}",${a.seatLabel},${a.student.id},"${a.student.name}","${a.student.dept}",${a.student.year},"${a.student.subjects[0]||''}",${a.student.sn}\n`;}));
+  if(unallocated.length){c+=`\nUNALLOCATED\n`;unallocated.forEach(s=>{c+=`UNPLACED,—,${s.id},"${s.name}","${s.dept}",${s.year},"${s.subjects[0]||''}",${s.sn}\n`;});}
+  dlCSV(c,`master_${exam.subject.replace(/\s+/g,'_')}.csv`);toast('Master CSV exported','ok');
+}
+
+function exportAllHalls(){
+  if(!S.lastResult){toast('Run allocation first','err');return;}
+  const {exam,hallResults}=S.lastResult;
+  hallResults.forEach((hr,i)=>{if(!hr.result.seated.length)return;setTimeout(()=>exportSingleHall(i),i*200);});
+  toast('Downloading all hall CSVs…','ok');
+}
+
+function exportSingleHall(i){
+  if(!S.lastResult)return;
+  const {exam,hallResults}=S.lastResult;const hr=hallResults[i];
+  let c=`Hall: ${hr.hall.name},Block: ${hr.hall.block},Floor: ${hr.hall.floor}\nExam: ${exam.subject},Date: ${exam.date}\n\nSeat,Student ID,Name,Department,Year,Subject,Special Needs\n`;
+  hr.result.seated.forEach(a=>{c+=`${a.seatLabel},${a.student.id},"${a.student.name}","${a.student.dept}",${a.student.year},"${a.student.subjects[0]||''}",${a.student.sn}\n`;});
+  dlCSV(c,`hall_${hr.hall.name.replace(/[^a-z0-9]/gi,'_')}.csv`);toast(`${hr.hall.name} exported`,'ok');
+}
+
+// ══════════════════════════════════════════════════
+// CSV HELPERS
+// ══════════════════════════════════════════════════
+function handleCSVFile(file,type){
+  if(!file)return;
+  Papa.parse(file,{header:true,skipEmptyLines:true,
+    complete:(res)=>showCSVPreview(res.data,file.name,type),
+    error:(e)=>toast('Parse error: '+e.message,'err')
+  });
+}
+
+function showCSVPreview(data,fname,type){
+  let parsed=[];
+  if(type==='students')parsed=data.map((r,i)=>({id:r.ID||`STU_${Date.now()}_${i}`,name:r.Name,dept:r.Department,year:parseInt(r.Year)||1,subjects:(r.Subjects||'').split(',').map(s=>s.trim()).filter(Boolean),sn:r.SpecialNeeds==='true'||r.SpecialNeeds==='TRUE',src:'CSV'})).filter(s=>s.name&&s.dept);
+  else if(type==='exams')parsed=data.map((r,i)=>({id:r.ID||`EXAM_${Date.now()}_${i}`,subject:r.Subject,date:r.Date,slot:r.TimeSlot||'morning',dur:parseInt(r.Duration)||120,req:(r.Requirements||'').split(',').map(s=>s.trim()).filter(Boolean),src:'CSV'})).filter(e=>e.subject&&e.date);
+  else if(type==='halls')parsed=data.map((r,i)=>{const type2=(r.RoomType||'standard').toLowerCase();const cfg=RCFG[type2];const rows=parseInt(r.Rows)||cfg?.rows||6;const cols=parseInt(r.Cols)||cfg?.cols||8;const cap=cols*rows;return{id:r.ID||`HALL_${Date.now()}_${i}`,name:r.Name,block:r.Block||'—',floor:r.Floor||'—',type:type2,rows,cols,cap,active:r.Active!=='false',blocked:new Set(),priority:i};}).filter(h=>h.name);
+  const prevId = type==='students' ? 'stu-csv-prev' : type==='exams' ? 'ex-csv-prev' : 'hall-csv-prev';
+  const el=document.getElementById(prevId);if(!el)return;
+  el.style.display='block';
+  el.innerHTML=`<div style="padding:10px 14px;background:rgba(0,212,200,.05);border-radius:8px;border:1px solid rgba(0,212,200,.15);display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:12px;color:var(--t1)">✅ <strong>${parsed.length}</strong> valid records from <strong>${fname}</strong></span>
+    <div style="display:flex;gap:8px"><button class="btn bd xs" onclick="const prevId=this.dataset.type==='students'?'stu-csv-prev':this.dataset.type==='exams'?'ex-csv-prev':'hall-csv-prev';document.getElementById(prevId).style.display='none'" data-type="${type}">Cancel</button><button class="btn bp xs" onclick='importCSVData(${JSON.stringify(parsed).replace(/'/g,"&#39;")}, "${type}", this)'>Import ${parsed.length}</button></div>
+  </div>`;
+}
+
+function importCSVData(data, type, btn){
+  if(type==='students'){S.students.push(...data);log(`Imported ${data.length} students from CSV`,'📤');}
+  else if(type==='exams'){S.exams.push(...data);log(`Imported ${data.length} exams from CSV`,'📤');}
+  else if(type==='halls'){
+    data.forEach(h=>{if(!h.blocked)h.blocked=new Set();});
+    S.halls.push(...data);
+    log(`Imported ${data.length} halls from CSV`,'📤');
+    renderHallPool();
+  }
+  updateNav(); renderDashboard();
+  // Hide the correct preview div
+  const prevId = type==='students' ? 'stu-csv-prev' : type==='exams' ? 'ex-csv-prev' : 'hall-csv-prev';
+  const el = document.getElementById(prevId);
+  if(el){ el.style.display='none'; el.innerHTML=''; }
+  // Reset file input
+  const fileId = type==='students' ? 'stu-file' : type==='exams' ? 'ex-file' : 'hall-file';
+  const fi = document.getElementById(fileId);
+  if(fi) fi.value='';
+  toast(`Imported ${data.length} ${type}`, 'ok');
+}
+
+function dlTemplate(type){
+  let c='';
+  if(type==='students'){c='ID,Name,Department,Year,Subjects,SpecialNeeds\nSTU_001,Alice Johnson,Computer Science,2,"Data Structures, Algorithms",false\nSTU_002,Bob Smith,Electronics,3,Circuits,true\n';dlCSV(c,'students_template.csv');}
+  else if(type==='exams'){c='ID,Subject,Date,TimeSlot,Duration,Requirements\nEXAM_001,Data Structures,2025-12-15,morning,180,\nEXAM_002,Algorithms,2025-12-16,afternoon,120,isolated\n';dlCSV(c,'exams_template.csv');}
+  else if(type==='halls'){c='ID,Name,Block,Floor,RoomType,Rows,Cols,Active\nHALL_001,Block A Room 101,Block A,Ground,standard,6,8,true\nHALL_002,Main Hall,Block B,First,large,8,12,true\nHALL_003,Custom Room,Block C,Second,custom,7,9,true\n';dlCSV(c,'halls_template.csv');}
+  toast(`${type} template downloaded`,'ok');
+}
+
+// ══════════════════════════════════════════════════
+// MODAL & UTILS
+// ══════════════════════════════════════════════════
+function showModal(id){document.getElementById(id).classList.add('on')}
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+let toastT;
+function toast(msg,type='ok'){const el=document.getElementById('toast');el.textContent=msg;el.className=`on ${type}`;clearTimeout(toastT);toastT=setTimeout(()=>{el.className='';},3400);}
+function dlCSV(content,filename){const b=new Blob([content],{type:'text/csv'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=filename;a.click();URL.revokeObjectURL(u);}
+</script>
+</body>
+</html>
