@@ -4,7 +4,7 @@ How to Use
 
 Clone or download the project files.
 
-git clone https://github.com/rahulkgamedev/Robust-Exam-Hall-Allocator
+git clone https://github.com/rahulkgamedev/Exam-Seat-Allocator
 
 Or download the ZIP file and extract it.
 
@@ -12,13 +12,14 @@ Or download the ZIP file and extract it.
 
 Open the project folder and locate:
 
-multi_hall_allocator.html
+index.html
+
 3. Run the Application
 Option 1 — Direct Browser Run
 
 Double-click the HTML file.
 
-multi_hall_allocator.html
+index.html
 
 The application will open in your browser.
 
@@ -26,7 +27,7 @@ Option 2 — VS Code Live Server (Recommended)
 Open project folder in VS Code
 Install Live Server extension
 Right click on:
-multi_hall_allocator.html
+index.html
 Click:
 Open with Live Server
 
@@ -57,6 +58,7 @@ Small Room
 Standard Room
 Large Hall
 Auditorium
+Custom Hall Range
 
 6. Run Seat Allocation
 Go to:
